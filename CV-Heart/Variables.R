@@ -65,19 +65,19 @@ labeled_METS_combined <- set_data_labels(METS_combined,variable_details,variable
 get_label(labeled_METS_combined)
 
 ## Obesity HWTGBMI ##
-BMI2001 <- rec_with_table(cchs2001, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der"), log = TRUE )
+BMI2001 <- rec_with_table(cchs2001, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der","HWTGBMI"), log = TRUE )
 BMI2001$year <- 2001
-BMI2003 <- rec_with_table(cchs2003, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der"), log = TRUE  )
+BMI2003 <- rec_with_table(cchs2003, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der","HWTGBMI"), log = TRUE  )
 BMI2003$year <- 2003
-BMI2005 <- rec_with_table(cchs2005, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der"), log = TRUE  )
+BMI2005 <- rec_with_table(cchs2005, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der","HWTGBMI"), log = TRUE  )
 BMI2005$year <- 2005
-BMI2007_2008 <- rec_with_table(cchs2007_2008, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der"), log = TRUE  )
+BMI2007_2008 <- rec_with_table(cchs2007_2008, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der","HWTGBMI"), log = TRUE  )
 BMI2007_2008$year <- 2007
-BMI2009_2010 <- rec_with_table(cchs2009_2010, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der"), log = TRUE  )
+BMI2009_2010 <- rec_with_table(cchs2009_2010, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der","HWTGBMI"), log = TRUE  )
 BMI2009_2010$year <- 2009
-BMI2011_2012 <- rec_with_table(cchs2011_2012, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der"), log = TRUE  )
+BMI2011_2012 <- rec_with_table(cchs2011_2012, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der","HWTGBMI"), log = TRUE  )
 BMI2011_2012$year <- 2011
-BMI2013_2014 <- rec_with_table(cchs2013_2014, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der"), log = TRUE  )
+BMI2013_2014 <- rec_with_table(cchs2013_2014, c("HWTGHTM", "HWTGWTK", "HWTGBMI_der","HWTGBMI"), log = TRUE  )
 BMI2013_2014$year <- 2013
 
 
@@ -189,18 +189,43 @@ combined <-cbind(labeled_REC_combined, labeled_BMI_combined, labeled_Diabetes_co
 ## Additional columns ##
 combined <- combined %>%
   # Household = 1 for 1-2 persons, Household = 2 for 3-4 persons, Household = 5+ persons
-  mutate(Household = if_else2(DHHGHSZ == 1 |DHHGHSZ == 2, 1,
-                              if_else2(DHHGHSZ == 3 |DHHGHSZ == 4, 2,
-                                       if_else2(DHHGHSZ == 5,3,NA)))) %>%
+  mutate(Household = case_when(DHHGHSZ == 1 |DHHGHSZ == 2 ~ 1,
+                               DHHGHSZ == 3 |DHHGHSZ == 4 ~ 2,
+                               DHHGHSZ == 5 ~ 3)) %>%
   #Income adequacy according to StatCan's 4-group categorization of income adequacy
-  mutate(Income_Adequency = if_else(((INCGHH_cont < 15000 & Household == 1)|(INCGHH_cont < 20000 & Household == 2)|(INCGHH_cont < 30000 & Household == 3)),"Q1",
-                                     if_else(((INCGHH_cont >= 15000 & INCGHH_cont <= 29999 & Household == 1)|(INCGHH_cont >= 20000 & INCGHH_cont <= 39999 & Household == 2)|(INCGHH_cont >= 30000 & INCGHH_cont <= 59999 & Household == 3)), "Q2",
-                                              if_else(((INCGHH_cont >= 30000 & INCGHH_cont <= 59999 & Household == 1)|(INCGHH_cont >= 40000 & INCGHH_cont <= 79999 & Household == 2)|(INCGHH_cont >= 60000 & INCGHH_cont <= 79999 & Household == 3)),"Q3",
-                                                       if_else(((INCGHH_cont >= 60000 & Household == 1)|(INCGHH_cont >= 80000 & Household == 2)|(INCGHH_cont >= 80000 & Household == 3)),"Q4","MISSING"))))) %>%
+  mutate(Income_Adequency = case_when((INCGHH_cont < 15000 & Household == 1)|(INCGHH_cont < 20000 & Household == 2)|(INCGHH_cont < 30000 & Household == 3) ~ "Q1",
+                                      (INCGHH_cont >= 15000 & INCGHH_cont <= 29999 & Household == 1)|(INCGHH_cont >= 20000 & INCGHH_cont <= 39999 & Household == 2)|(INCGHH_cont >= 30000 & INCGHH_cont <= 59999 & Household == 3)~ "Q2",
+                                      (INCGHH_cont >= 30000 & INCGHH_cont <= 59999 & Household == 1)|(INCGHH_cont >= 40000 & INCGHH_cont <= 79999 & Household == 2)|(INCGHH_cont >= 60000 & INCGHH_cont <= 79999 & Household == 3)~"Q3",
+                                      (INCGHH_cont >= 60000 & Household == 1)|(INCGHH_cont >= 80000 & Household == 2)|(INCGHH_cont >= 80000 & Household == 3)~"Q4")) %>%
   mutate(DHHGAGE_C=suppressWarnings(as.numeric(as.character(DHHGAGE_C))))%>%
   # Age Group = 1 for 12-34 years old (DHHGAGE_C=1-6), Age Group = 2 for 35-49 years old (DHHGAGE_C=7-9), Age Group = 3 for 50-64(DHHGAGE_C=10-12), Age Group = 4 for 65-74 years old (DHHGAGE_C=13-14), Age Group = 5 for 75+ years old (15-16)
-  mutate(Age_Group = if_else2(DHHGAGE_C >=1 & DHHGAGE_C <= 6, 1,
-                              if_else2(DHHGAGE_C >= 7 & DHHGAGE_C <=9, 2,
-                                       if_else2(DHHGAGE_C >= 10 & DHHGAGE_C <= 12, 3,
-                                                if_else2(DHHGAGE_C ==13 | DHHGAGE_C == 14, 4,
-                                                         if_else2(DHHGAGE_C == 15| DHHGAGE_C == 16, 5, "MISSING"))))))
+  # mutate(Age_Group = if_else2(DHHGAGE_C >=1 & DHHGAGE_C <= 6, 1,
+  #                             if_else2(DHHGAGE_C >= 7 & DHHGAGE_C <=9, 2,
+  #                                      if_else2(DHHGAGE_C >= 10 & DHHGAGE_C <= 12, 3,
+  #                                               if_else2(DHHGAGE_C ==13 | DHHGAGE_C == 14, 4,
+  #                                                        if_else2(DHHGAGE_C == 15| DHHGAGE_C == 16, 5, "MISSING")))))) %>%
+  mutate(Age_Group = case_when(DHHGAGE_C >=1 & DHHGAGE_C <= 6 ~ 1,
+                               DHHGAGE_C >= 7 & DHHGAGE_C <=9 ~ 2,
+                               DHHGAGE_C >= 10 & DHHGAGE_C <= 12 ~ 3,
+                               DHHGAGE_C ==13 | DHHGAGE_C == 14 ~ 4,
+                               DHHGAGE_C == 15| DHHGAGE_C == 16 ~ 5)) %>%
+  # BMI category = 1 for der BMI <25, BMI category = 2 for der BMI 25-29, BMI category = 3 for der BMI >=30
+  mutate(BMI = case_when(HWTGBMI_der < 25 ~ 1,
+                         HWTGBMI_der >= 25 & HWTGBMI_der < 29 ~ 2,
+                         HWTGBMI_der >= 30 ~ 3))
+# refer to pack_year_fun
+attach(combined)
+combined$Smoke_Status <-pack_years_fun(SMKDSTY, DHHGAGE_cont, SMK_09A_cont, SMKG09C, SMKG203_cont,
+                                           SMKG207_cont, SMK_204, SMK_05B,
+                                           SMK_208, SMK_05C, SMKG01C_cont, SMK_01A)
+# NA?
+
+sum(is.na(REC2013_2014$WTS_M)) # 3 NA in the 2013 weights when using flow but no NA is cchs2013_2014 #
+
+combined$WTS_M[is.na(combined$WTS_M)] <- 99999
+combined <- combined %>%
+  mutate(WTS_M=replace(WTS_M,WTS_M == 99999 & HWTGBMI == 25.14, 1.07))%>%
+  mutate(WTS_M=replace(WTS_M,WTS_M == 99999 & HWTGBMI == 23.83, 1.07)) %>%
+  mutate(WTS_M=replace(WTS_M, WTS_M== 99999 & HWTGBMI == 26.91, 22.2))
+
+sum(is.na(combined$WTS_M)) # check
