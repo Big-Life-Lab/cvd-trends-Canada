@@ -212,7 +212,19 @@ combined <- combined %>%
   # BMI category = 1 for der BMI <25, BMI category = 2 for der BMI 25-29, BMI category = 3 for der BMI >=30
   mutate(BMI = case_when(HWTGBMI_der < 25 ~ 1,
                          HWTGBMI_der >= 25 & HWTGBMI_der < 29 ~ 2,
-                         HWTGBMI_der >= 30 ~ 3))
+                         HWTGBMI_der >= 30 ~ 3)) %>%
+  # provinces
+  mutate(Province = case_when(GEOGPRV == 10 ~ "Newfoundland and Labrador",
+            GEOGPRV == 11 ~ "Prince Edward Island",
+            GEOGPRV == 12 ~ "Nova Scotia",
+            GEOGPRV == 13 ~ "New Brunswick",
+            GEOGPRV == 24 ~ "Quebec",
+            GEOGPRV == 35 ~ "Ontario",
+            GEOGPRV == 46 ~ "Manitoba",
+            GEOGPRV == 47 ~ "Saskatchewan",
+            GEOGPRV == 48 ~ "Alberta",
+            GEOGPRV == 59 ~ "British Columbia",
+            GEOGPRV == 60 ~ "Yukon/NWT/Nunavut"))
 # refer to pack_year_fun
 attach(combined)
 combined$Smoke_Status <-pack_years_fun(SMKDSTY, DHHGAGE_cont, SMK_09A_cont, SMKG09C, SMKG203_cont,
