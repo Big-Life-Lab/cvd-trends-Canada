@@ -159,8 +159,10 @@ DiabetesT1_Female <-combined %>%
   mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused")
 
 #Combined table
-Tb_Diabetes<-rbind("Both sex",DiabetesT1, "Male", DiabetesT1_Male, "Female", DiabetesT1_Female)
-
+Tb_Diabetes<-rbind("",DiabetesT1, "", DiabetesT1_Male, "", DiabetesT1_Female)
+rownames(Tb_Diabetes)[rownames(Tb_Diabetes)==1]="Both sex"
+rownames(Tb_Diabetes)[rownames(Tb_Diabetes)==8]="Male"
+rownames(Tb_Diabetes)[rownames(Tb_Diabetes)==15]="Female"
 ### Hypertension ###
 #Both sex
 HTT1 <-combined %>%
@@ -208,7 +210,10 @@ HTT1_Female <-combined %>%
   mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused") 
 
 #Combined table
-Tb_HT<-rbind("Both sex",HTT1, "Male", HTT1_Male, "Female", HTT1_Female)
+Tb_HT<-rbind("",HTT1, "", HTT1_Male, "", HTT1_Female)
+rownames(Tb_HT)[rownames(Tb_HT)==1]="Both sex"
+rownames(Tb_HT)[rownames(Tb_HT)==8]="Male"
+rownames(Tb_HT)[rownames(Tb_HT)==15]="Female"
 
 ### Obesity ###
 #Both sex
@@ -257,7 +262,10 @@ BMIT1_Female <-combined %>%
   mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused") 
 
 #Combined table
-Tb_BMI<-rbind("Both sex",BMIT1, "Male", BMIT1_Male, "Female", BMIT1_Female)
+Tb_BMI<-rbind("",BMIT1, "", BMIT1_Male, "", BMIT1_Female)
+rownames(Tb_BMI)[rownames(Tb_BMI)==1]="Both sex"
+rownames(Tb_BMI)[rownames(Tb_BMI)==8]="Male"
+rownames(Tb_BMI)[rownames(Tb_BMI)==15]="Female"
 
 ### Inactivity ###
 #Both sex
@@ -306,7 +314,10 @@ METST1_Female <-combined %>%
   mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused") 
 
 #Combined table
-Tb_METS<-rbind("Both sex",METST1, "Male", METST1_Male, "Female", METST1_Female)
+Tb_METS<-rbind("",METST1, "", METST1_Male, "", METST1_Female)
+rownames(Tb_METS)[rownames(Tb_METS)==1]="Both sex"
+rownames(Tb_METS)[rownames(Tb_METS)==8]="Male"
+rownames(Tb_METS)[rownames(Tb_METS)==15]="Female"
 
 ### smoking ###
 #Both sex
@@ -358,4 +369,8 @@ SmokeT1_Female <-combined %>%
   mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused") 
 
 #Combined table
-Tb_Smoke<-rbind("Both sex",SmokeT1, "Male", SmokeT1_Male, "Female", SmokeT1_Female)
+Tb_Smoke<-rbind("",SmokeT1, "", SmokeT1_Male, "", SmokeT1_Female)
+rownames(Tb_Smoke)[rownames(Tb_Smoke)==1]="Both sex"
+rownames(Tb_Smoke)[rownames(Tb_Smoke)==8]="Male"
+rownames(Tb_Smoke)[rownames(Tb_Smoke)==15]="Female"
+
