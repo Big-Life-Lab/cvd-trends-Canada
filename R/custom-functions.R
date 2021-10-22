@@ -1,12 +1,21 @@
 # These are all the functions that the derived variables needs in the
 # variables details files
 
-binge_drinker_fun <- cchsflow::binge_drinker_fun
-diet_score_fun <- cchsflow::diet_score_fun
-bmi_fun <- cchsflow::bmi_fun
-pack_years_fun <- cchsflow::pack_years_fun
-pct_time_fun <- cchsflow::pct_time_fun
 if_else2 <- cchsflow::if_else2
+low_drink_short_fun <- cchsflow::low_drink_short_fun
+low_drink_long_fun <- cchsflow::low_drink_long_fun
+age_cat_fun <- cchsflow::age_cat_fun
+energy_exp_fun <- cchsflow::energy_exp_fun
+bmi_fun <- cchsflow::bmi_fun
+bmi_fun_cat <- cchsflow::bmi_fun_cat
+immigration_fun <- cchsflow::immigration_fun
+low_drink_score_fun <- cchsflow::low_drink_score_fun
+low_drink_score_fun1 <- cchsflow::low_drink_score_fun1
+pack_years_fun <- cchsflow::pack_years_fun
+pack_years_fun_cat <- cchsflow::pack_years_fun_cat
+pct_time_fun <- cchsflow::pct_time_fun
+pct_time_fun_cat<- cchsflow::pct_time_fun_cat
+SMKG040_fun <- cchsflow::SMKG040_fun
 time_quit_smoking_fun <- cchsflow::time_quit_smoking_fun
 smoke_simple_fun <- cchsflow::smoke_simple_fun
 
@@ -16,28 +25,28 @@ SurveyCycle.fun <- function(data_name) {
     cchs2001 = {
       return("2001")
     },
-    cchs2003_p = {
+    cchs2003 = {
       return("2003")
     },
-    cchs2005_p = {
+    cchs2005 = {
       return("2005")
     },
-    cchs2007_2008p = {
+    cchs2007_2008 = {
       return("2007_2008")
     },
-    cchs2009_2010p = {
+    cchs2009_2010 = {
       return("2009_2010")
     },
-    cchs2011_2012_p = {
+    cchs2011_2012 = {
       return("2011_2012")
     },
-    cchs2013_2014p = {
+    cchs2013_2014 = {
       return("2013_2014")
     },
-    cchs2015_2016_p = {
+    cchs2015_2016 = {
       return("2015_2016")
     },
-    cchs2017_2018_p = {
+    cchs2017_2018 = {
       return("2017_2018")
     }
   )

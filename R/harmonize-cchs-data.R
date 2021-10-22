@@ -42,7 +42,7 @@ harmonize_cchs_data <- function(
       notes = FALSE,
     )
     
-    # If the harmonized_data has not been initialized then set to the
+    # If the harmonized_data has not been intialized then set to the
     # current one.
     # Otherwise row append the current one to the harmonize_data
     if (is.null(harmonized_data)) {
