@@ -42,9 +42,6 @@ harmonized_2015_2016 <- cchsflow::rec_with_table(cchs2015_2016, variables = vari
 )
 harmonized_2015_2016$year <- 2015
 attach(harmonized_2015_2016)
-harmonized_2015_2016$energy_exp <- energy_exp_fun(DHHGAGE_cont, PAA_045, PAA_050, PAA_075, PAA_080, PAADVDYS, 
-                                                  PAADVVIG, PAYDVTOA, PAYDVADL, PAYDVVIG, PAYDVDYS)
-
 
 harmonized_2017_2018 <- cchsflow::rec_with_table(cchs2017_2018, variables = variables, variable_details = variable_details, 
                                                  custom_function_path = "R/custom-functions.R",
@@ -52,8 +49,6 @@ harmonized_2017_2018 <- cchsflow::rec_with_table(cchs2017_2018, variables = vari
 )
 harmonized_2017_2018$year <- 2017
 attach(harmonized_2017_2018)
-harmonized_2017_2018$energy_exp <- energy_exp_fun(DHHGAGE_cont, PAA_045, PAA_050, PAA_075, PAA_080, PAADVDYS, 
-                                                  PAADVVIG, PAYDVTOA, PAYDVADL, PAYDVVIG, PAYDVDYS)
 
 # Combined
 harmonized <- list(harmonized_2001, harmonized_2003, harmonized_2005, harmonized_2007_2008, harmonized_2009_2010,harmonized_2011_2012, harmonized_2013_2014, harmonized_2015_2016, harmonized_2017_2018)
