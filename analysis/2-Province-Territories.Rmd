@@ -1,0 +1,137 @@
+---
+title: "Prevalence by province"
+author: "Kitty Chen"
+date: "26/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# weight_year <- harmonized_combined %>%
+#   select(year, WTS_M)%>%
+#   group_by(year)%>%
+#   summarise(Weighted_pop=sum(WTS_M))
+```
+
+## Hypertension
+
+```{r Hypertension}
+library(tidyr)
+library(dplyr)
+ht_pt <-harmonized_combined %>% 
+  filter(CCC_071 == 1) %>%
+  select(year,Province,WTS_M)%>%
+  rename('Hypertension'=Province)
+
+ht_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=ht_pt) %>%
+  gtsummary::tbl_svysummary(by = 'year', 
+                            statistic = 'Hypertension' ~"{p}",
+                            missing = "no") 
+h<-print(ht_tb)
+```
+
+## Diabetes
+
+```{r Diabetes}
+db_pt <-harmonized_combined %>%
+  filter(CCC_101 == 1) %>%
+  select(year,Province,WTS_M) %>%
+  group_by(year,Province)%>%
+  rename('Diabetes'=Province)
+
+db_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=db_pt) %>%
+  gtsummary::tbl_svysummary(by = 'year', 
+                            statistic = 'Diabetes' ~"{p}",
+                            missing = "no") 
+h<-print(db_tb)
+```
+
+## Blood cholesterol
+
+```{r Blood cholesterol}
+bc_pt <-harmonized_combined %>%
+  filter(CCC_075 == 1) %>%
+  select(year,Province,WTS_M) %>%
+  rename('High blood cholesterol'=Province)
+
+bc_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=bc_pt) %>%
+  gtsummary::tbl_svysummary(by = 'year', 
+                            statistic = 'High blood cholesterol' ~"{p}",
+                            missing = "no") 
+h<-print(bc_tb)
+
+```
+
+## Obesity
+```{r Obesity}
+bmi_pt <-harmonized_combined %>%
+  filter(HWTGBMI_der_cat4 %in% c(3:4)) %>%
+  select(year,Province,WTS_M) %>%
+  rename('Obesity'=Province)
+
+bmi_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=bmi_pt) %>%
+  gtsummary::tbl_svysummary(by = 'year', 
+                            statistic = 'Obesity' ~"{p}",
+                            missing = "no") 
+h<-print(bmi_tb)
+
+
+```
+
+## Inactivity
+```{r Physical inactivity}
+mets_pt <-harmonized_combined %>%
+  filter(energy_exp<=1.5) %>%
+  select(year,Province,WTS_M) %>%
+  rename('Physical inactivity'=Province)
+
+mets_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=mets_pt) %>%
+  gtsummary::tbl_svysummary(by = 'year', 
+                            statistic = 'Physical inactivity' ~"{p}",
+                            missing = "no") 
+h<-print(mets_tb)
+
+```
+
+## Smoking
+```{r Smoking}
+smoke_pt <-harmonized_combined %>%
+  filter(SMKDSTY_cat3 == 1) %>%
+  select(year,Province,WTS_M) %>%
+  rename('Current smoker'=Province)
+
+smoke_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=smoke_pt) %>%
+  gtsummary::tbl_svysummary(by = 'year', 
+                            statistic = 'Current smoker' ~"{p}",
+                            missing = "no") %>%
+  gtsummary::add_p(test=everything()~"chisq.test",
+                   test.args = all_tests("chisq.test") ~ list(var.equal = TRUE))
+h<-print(smoke_tb)
+```
+
+## Drinking
+```{r Drinking}
+alc_pt <-harmonized_combined %>%
+  filter(low_drink_score %in% c(3:4)) %>%
+  select(year,Province,WTS_M) %>%
+  rename('Drinking'=Province)
+
+alc_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=alc_pt) %>%
+  gtsummary::tbl_svysummary(by = 'year', 
+                            statistic = 'Drinking' ~"{p}",
+                            missing = "no") 
+h<-print(alc_tb)
+class(alc_tb)
+```
+
+## Full table
+```{r}
+Tb_pt <- gtsummary::tbl_stack(list(alc_tb, bmi_tb,db_tb,ht_tb, mets_tb,smoke_tb)) %>%
+  gtsummary::add_p()
+Tb_pt %>%
+  gtsummary::add_p()
+```
+
