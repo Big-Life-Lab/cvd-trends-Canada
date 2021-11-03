@@ -56,3 +56,24 @@ SurveyCycle.fun <- function(data_name) {
     data_name
   ))
 }
+
+# Categorical alcohol using seven more year study
+alc_cat_fun<- 
+  function(DHH_SEX, ALC_1, ALWDWKY){
+    # Current non-drinker
+    if_else2(ALC_1 ==2, 1,
+    # Light
+    if_else2(ALC_1 ==1 & DHH_SEX ==1 & ALWDWKY %in% c(0:4), 2,
+    if_else2(ALC_1 ==1 & DHH_SEX ==2 & ALWDWKY %in% c(0:2), 2,
+    # Moderate
+    if_else2(ALC_1 ==1 & DHH_SEX ==1 & ALWDWKY %in% c(5:9), 3,
+    if_else2(ALC_1 ==1 & DHH_SEX ==2 & ALWDWKY %in% c(3:5), 3,
+    # Heavy
+    if_else2(ALC_1 ==1 & DHH_SEX ==1 & ALWDWKY %in% c(10:24), 4,
+    if_else2(ALC_1 ==1 & DHH_SEX ==2 & ALWDWKY %in% c(6:17), 4,
+    # Binge 
+    if_else2(ALC_1 ==1 & DHH_SEX ==1 & ALWDWKY > 24, 5,
+    if_else2(ALC_1 ==1 & DHH_SEX ==2 & ALWDWKY > 17, 5,
+    if_else2(ALWDWKY == "NA(b)" | ALC_1 == "NA(b)"|DHH_SEX== "NA(b)", tagged_na("b"), tagged_na("a"))
+    )))))))))
+  }

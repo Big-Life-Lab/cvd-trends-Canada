@@ -41,16 +41,15 @@ harmonized_2015_2016 <- cchsflow::rec_with_table(cchs2015_2016, variables = vari
                                                  notes = FALSE
 )
 harmonized_2015_2016$year <- 2015
-attach(harmonized_2015_2016)
 
 harmonized_2017_2018 <- cchsflow::rec_with_table(cchs2017_2018, variables = variables, variable_details = variable_details, 
                                                  custom_function_path = "R/custom-functions.R",
                                                  notes = FALSE
 )
 harmonized_2017_2018$year <- 2017
-attach(harmonized_2017_2018)
 
 # Combined
+harmonized_combined <- merge_rec_data(harmonized_2001, harmonized_2003, harmonized_2005, harmonized_2007_2008, harmonized_2009_2010,harmonized_2011_2012, harmonized_2013_2014, harmonized_2015_2016, harmonized_2017_2018)
 harmonized <- list(harmonized_2001, harmonized_2003, harmonized_2005, harmonized_2007_2008, harmonized_2009_2010,harmonized_2011_2012, harmonized_2013_2014, harmonized_2015_2016, harmonized_2017_2018)
 harmonized_combined <- bind_rows(harmonized)
 
@@ -78,6 +77,5 @@ harmonized_combined <-harmonized_combined %>%
 
 # Add # of risk factors
 attach(harmonized_combined)
-harmonized_combined$Risk_factors <-cvd_risk_score(HWTGBMI_der_cat4, CCC_071, CCC_101, 
-                                       CCC_075, low_drink_score, SMKDSTY_cat3, activity)
+harmonized_combined$Alcohol <-alc_cat_fun(DHH_SEX, ALC_1, ALWDWKY)
 
