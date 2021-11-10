@@ -1,376 +1,325 @@
-#### Population ####
-
-##Pop number by year (weighted)
-Wpop2001 <- combined %>%
-  filter(year == "2001") %>%
-  summarise(sum(WTS_M))
-
-Wpop2003 <- combined %>%
-  filter(year == "2003") %>%
-  summarise(sum(WTS_M))
-
-Wpop2005 <- combined %>%
-  filter(year == "2005") %>%
-  summarise(sum(WTS_M))
-
-Wpop2007_2008 <- combined %>%
-  filter(year == "2007") %>%
-  summarise(sum(WTS_M))
-
-Wpop2009_2010 <- combined %>%
-  filter(year == "2009") %>%
-  summarise(sum(WTS_M))
-
-Wpop2011_2012 <- combined %>%
-  filter(year == "2011") %>%
-  summarise(sum(WTS_M))
-
-Wpop2013_2014 <- combined %>%
-  filter(year == "2013") %>%
-  summarise(sum(WTS_M)) 
-
-Wpop <- as.integer(c(Wpop2001,Wpop2003,Wpop2005,Wpop2007_2008,Wpop2009_2010,Wpop2011_2012,Wpop2013_2014))
-
-##Pop number by year and sex (weighted)
-#Male
-Wpop2001_Male <- combined %>%
-  filter(year == "2001" & DHH_SEX ==1) %>%
-  summarise(sum(WTS_M))
-
-Wpop2003_Male <- combined %>%
-  filter(year == "2003" & DHH_SEX ==1) %>%
-  summarise(sum(WTS_M))
-
-Wpop2005_Male <- combined %>%
-  filter(year == "2005" & DHH_SEX ==1) %>%
-  summarise(sum(WTS_M))
-
-Wpop2007_2008_Male <- combined %>%
-  filter(year == "2007" & DHH_SEX ==1) %>%
-  summarise(sum(WTS_M))
-
-Wpop2009_2010_Male <- combined %>%
-  filter(year == "2009" & DHH_SEX ==1) %>%
-  summarise(sum(WTS_M))
-
-Wpop2011_2012_Male <- combined %>%
-  filter(year == "2011" & DHH_SEX ==1) %>%
-  summarise(sum(WTS_M))
-
-Wpop2013_2014_Male <- combined %>%
-  filter(year == "2013" & DHH_SEX ==1) %>%
-  summarise(sum(WTS_M)) 
-
-#Female
-Wpop2001_Female <- combined %>%
-  filter(year == "2001" & DHH_SEX ==2) %>%
-  summarise(sum(WTS_M))
-
-Wpop2003_Female <- combined %>%
-  filter(year == "2003" & DHH_SEX ==2) %>%
-  summarise(sum(WTS_M))
-
-Wpop2005_Female <- combined %>%
-  filter(year == "2005" & DHH_SEX ==2) %>%
-  summarise(sum(WTS_M))
-
-Wpop2007_2008_Female <- combined %>%
-  filter(year == "2007" & DHH_SEX ==2) %>%
-  summarise(sum(WTS_M))
-
-Wpop2009_2010_Female <- combined %>%
-  filter(year == "2009" & DHH_SEX ==2) %>%
-  summarise(sum(WTS_M))
-
-Wpop2011_2012_Female <- combined %>%
-  filter(year == "2011" & DHH_SEX ==2) %>%
-  summarise(sum(WTS_M))
-
-Wpop2013_2014_Female <- combined %>%
-  filter(year == "2013" & DHH_SEX ==2) %>%
-  summarise(sum(WTS_M))
-
-#####################################################################################################################
-#### survey analysis ####
-library(survey)
-
-combined_sd <-svydesign(ids=~1, data = combined, weight = combined$WTS_M)
-
-##### Prevalence #####
-prev <- function (var) {
-  group_vars <- sym(var)
-  svystandardize(combined_sd, by = ~year, over = make.formula(var),
-                 population = Wpop) %>%
-    group_by(!groups_vars)%>%
-    summarize(n = unweighted(n()),
-              pct = survey_mean()) %>% 
-    mutate_at("pct", function(x) round(100 * x, 1)) %>% 
-    mutate_at("pct_se", function(x) round(100 * x, 3))
-} #eek
-
-
-prev("Age_Group")
-
 ##### Prevalence of risk factors by age categories #####
+pop_weight_year_age_age <- harmonized_combined %>%
+  select(year,DHH_SEX,Age_Group,WTS_M)%>%
+  group_by(year,Age_Group)%>%
+  summarise(Weighted_pop=sum(WTS_M))%>% 
+  spread(year, Weighted_pop)
+
+pop_weight_male_age <- harmonized_combined %>%
+  select(year,DHH_SEX,Age_Group,WTS_M)%>%
+  group_by(year,Age_Group,DHH_SEX)%>%
+  summarise(Weighted_pop=sum(WTS_M))%>% 
+  spread(year, Weighted_pop)%>%
+  filter(DHH_SEX ==1)
+
+pop_weight_female_age <- harmonized_combined %>%
+  select(year,DHH_SEX,Age_Group,WTS_M)%>%
+  group_by(year,Age_Group,DHH_SEX)%>%
+  summarise(Weighted_pop=sum(WTS_M))%>% 
+  spread(year, Weighted_pop)%>%
+  filter(DHH_SEX ==2)
+
 ### Diabetes ###
 #Both sex
-DiabetesT1 <-combined %>%
+DiabetesT1 <-harmonized_combined %>%
   filter(CCC_101 == 1) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_year_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_year_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_year_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_year_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_year_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_year_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_year_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_year_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_year_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 
 #Male
-DiabetesT1_Male <-combined %>%
+DiabetesT1_Male <-harmonized_combined %>%
   filter(CCC_101 == 1 & DHH_SEX == 1) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Male)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Male)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Male)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Male)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Male)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Male)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Male)*100, .keep="unused") 
-
+  mutate(Prev2001 = `2001`/pop_weight_male_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_male_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_male_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_male_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_male_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_male_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_male_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_male_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_male_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 #Female 
-DiabetesT1_Female <-combined %>%
+DiabetesT1_Female <-harmonized_combined %>%
   filter(CCC_101 == 1 & DHH_SEX == 2) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Female)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Female)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Female)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Female)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Female)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Female)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused")
+  mutate(Prev2001 = `2001`/pop_weight_female_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_female_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_female_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_female_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_female_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_female_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_female_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_female_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_female_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 
 #Combined table
 Tb_Diabetes<-rbind("",DiabetesT1, "", DiabetesT1_Male, "", DiabetesT1_Female)
 rownames(Tb_Diabetes)[rownames(Tb_Diabetes)==1]="Both sex"
-rownames(Tb_Diabetes)[rownames(Tb_Diabetes)==8]="Male"
-rownames(Tb_Diabetes)[rownames(Tb_Diabetes)==15]="Female"
+rownames(Tb_Diabetes)[rownames(Tb_Diabetes)==7]="Male"
+rownames(Tb_Diabetes)[rownames(Tb_Diabetes)==13]="Female"
+
 ### Hypertension ###
 #Both sex
-HTT1 <-combined %>%
+HTT1 <-harmonized_combined %>%
   filter(CCC_071 == 1) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_year_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_year_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_year_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_year_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_year_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_year_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_year_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_year_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_year_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) ) 
 
 #Male
-HTT1_Male <-combined %>%
+HTT1_Male <-harmonized_combined %>%
   filter(CCC_071 == 1 & DHH_SEX == 1) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Male)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Male)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Male)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Male)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Male)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Male)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Male)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_male_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_male_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_male_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_male_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_male_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_male_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_male_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_male_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_male_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 
 #Female 
-HTT1_Female <-combined %>%
+HTT1_Female <-harmonized_combined %>%
   filter(CCC_071 == 1 & DHH_SEX == 2) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Female)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Female)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Female)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Female)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Female)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Female)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_female_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_female_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_female_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_female_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_female_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_female_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_female_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_female_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_female_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) ) 
 
 #Combined table
 Tb_HT<-rbind("",HTT1, "", HTT1_Male, "", HTT1_Female)
 rownames(Tb_HT)[rownames(Tb_HT)==1]="Both sex"
-rownames(Tb_HT)[rownames(Tb_HT)==8]="Male"
-rownames(Tb_HT)[rownames(Tb_HT)==15]="Female"
+rownames(Tb_HT)[rownames(Tb_HT)==7]="Male"
+rownames(Tb_HT)[rownames(Tb_HT)==13]="Female"
 
 ### Obesity ###
 #Both sex
-BMIT1 <-combined %>%
-  filter(BMI == 3) %>%
+BMIT1 <-harmonized_combined %>%
+  filter(HWTGBMI_der_cat4 %in% c(3:4)) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_year_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_year_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_year_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_year_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_year_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_year_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_year_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_year_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_year_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 
 #Male
-BMIT1_Male <-combined %>%
-  filter(BMI == 3 & DHH_SEX == 1) %>%
+BMIT1_Male <-harmonized_combined %>%
+  filter(HWTGBMI_der_cat4 %in% c(3:4) & DHH_SEX == 1) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year, Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Male)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Male)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Male)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Male)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Male)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Male)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Male)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_male_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_male_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_male_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_male_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_male_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_male_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_male_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_male_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_male_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) ) 
 
 #Female 
-BMIT1_Female <-combined %>%
-  filter(BMI == 3 & DHH_SEX == 2) %>%
+BMIT1_Female <-harmonized_combined %>%
+  filter(HWTGBMI_der_cat4 %in% c(3:4) & DHH_SEX == 2) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Female)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Female)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Female)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Female)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Female)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Female)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_female_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_female_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_female_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_female_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_female_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_female_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_female_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_female_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_female_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 
 #Combined table
 Tb_BMI<-rbind("",BMIT1, "", BMIT1_Male, "", BMIT1_Female)
 rownames(Tb_BMI)[rownames(Tb_BMI)==1]="Both sex"
-rownames(Tb_BMI)[rownames(Tb_BMI)==8]="Male"
-rownames(Tb_BMI)[rownames(Tb_BMI)==15]="Female"
+rownames(Tb_BMI)[rownames(Tb_BMI)==7]="Male"
+rownames(Tb_BMI)[rownames(Tb_BMI)==13]="Female"
 
 ### Inactivity ###
 #Both sex
-METST1 <-combined %>%
-  filter(PACDEE<=1.5) %>%
+METST1 <-harmonized_combined %>%
+  filter(activity == "Inactive") %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_year_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_year_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_year_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_year_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_year_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_year_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_year_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_year_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_year_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) ) 
 
 #Male
-METST1_Male <-combined %>%
-  filter(PACDEE<=1.5 & DHH_SEX == 1) %>%
+METST1_Male <-harmonized_combined %>%
+  filter(activity == "Inactive" & DHH_SEX == 1) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Male)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Male)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Male)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Male)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Male)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Male)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Male)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_male_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_male_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_male_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_male_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_male_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_male_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_male_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_male_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_male_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) ) 
 
 #Female 
-METST1_Female <-combined %>%
-  filter(PACDEE<=1.5 & DHH_SEX == 2) %>%
+METST1_Female <-harmonized_combined %>%
+  filter(activity == "Inactive" & DHH_SEX == 2) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Female)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Female)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Female)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Female)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Female)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Female)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_female_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_female_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_female_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_female_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_female_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_female_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_female_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_female_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_female_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 
 #Combined table
 Tb_METS<-rbind("",METST1, "", METST1_Male, "", METST1_Female)
 rownames(Tb_METS)[rownames(Tb_METS)==1]="Both sex"
-rownames(Tb_METS)[rownames(Tb_METS)==8]="Male"
-rownames(Tb_METS)[rownames(Tb_METS)==15]="Female"
+rownames(Tb_METS)[rownames(Tb_METS)==7]="Male"
+rownames(Tb_METS)[rownames(Tb_METS)==13]="Female"
 
 ### smoking ###
 #Both sex
-SmokeT1 <-combined %>%
-  filter(SMKDSTY == 1 | SMKDSTY == 2) %>%
-  filter(Smoke_Status >= 1) %>%
+SmokeT1 <-harmonized_combined %>%
+  filter(SMKDSTY_cat3 == 1) %>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_year_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_year_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_year_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_year_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_year_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_year_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_year_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_year_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_year_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) ) 
 
 #Male
-SmokeT1_Male <-combined %>%
-  filter(SMKDSTY == 1 | SMKDSTY == 2) %>%
-  filter(Smoke_Status >= 1)%>%
+SmokeT1_Male <-harmonized_combined %>%
+  filter(SMKDSTY_cat3 == 1)%>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Male)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Male)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Male)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Male)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Male)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Male)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Male)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_male_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_male_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_male_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_male_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_male_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_male_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_male_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_male_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_male_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 
 #Female 
-SmokeT1_Female <-combined %>%
-  filter(SMKDSTY == 1 | SMKDSTY == 2) %>%
-  filter(Smoke_Status >= 1)%>%
+SmokeT1_Female <-harmonized_combined %>%
+  filter(SMKDSTY_cat3 == 1)%>%
   select(year,Age_Group,WTS_M) %>%
   group_by(year,Age_Group)%>%
   summarise(Weight=sum(WTS_M))%>%
   spread(year,Weight)%>%
-  mutate(Prev2001 = `2001`/as.numeric(Wpop2001_Female)*100, .keep="unused") %>%
-  mutate(Prev2003 = `2003`/as.numeric(Wpop2003_Female)*100, .keep="unused") %>%
-  mutate(Prev2005 = `2005`/as.numeric(Wpop2005_Female)*100, .keep="unused") %>%
-  mutate(Prev2007 = `2007`/as.numeric(Wpop2007_2008_Female)*100, .keep="unused") %>%
-  mutate(Prev2009 = `2009`/as.numeric(Wpop2009_2010_Female)*100, .keep="unused") %>%
-  mutate(Prev2011 = `2011`/as.numeric(Wpop2011_2012_Female)*100, .keep="unused") %>%
-  mutate(Prev2013 = `2013`/as.numeric(Wpop2013_2014_Female)*100, .keep="unused") 
+  mutate(Prev2001 = `2001`/pop_weight_female_age$`2001`*100, .keep="unused") %>%
+  mutate(Prev2003 = `2003`/pop_weight_female_age$`2003`*100, .keep="unused") %>%
+  mutate(Prev2005 = `2005`/pop_weight_female_age$`2005`*100, .keep="unused") %>%
+  mutate(Prev2007 = `2007`/pop_weight_female_age$`2007`*100, .keep="unused") %>%
+  mutate(Prev2009 = `2009`/pop_weight_female_age$`2009`*100, .keep="unused") %>%
+  mutate(Prev2011 = `2011`/pop_weight_female_age$`2011`*100, .keep="unused") %>%
+  mutate(Prev2013 = `2013`/pop_weight_female_age$`2013`*100, .keep="unused") %>%
+  mutate(Prev2015 = `2015`/pop_weight_female_age$`2015`*100, .keep="unused") %>%
+  mutate(Prev2017 = `2017`/pop_weight_female_age$`2017`*100, .keep="unused") %>%
+  mutate(Change = ((Prev2017 - Prev2001) / Prev2001*100) )
 
 #Combined table
 Tb_Smoke<-rbind("",SmokeT1, "", SmokeT1_Male, "", SmokeT1_Female)
 rownames(Tb_Smoke)[rownames(Tb_Smoke)==1]="Both sex"
-rownames(Tb_Smoke)[rownames(Tb_Smoke)==8]="Male"
-rownames(Tb_Smoke)[rownames(Tb_Smoke)==15]="Female"
+rownames(Tb_Smoke)[rownames(Tb_Smoke)==7]="Male"
+rownames(Tb_Smoke)[rownames(Tb_Smoke)==13]="Female"
 
