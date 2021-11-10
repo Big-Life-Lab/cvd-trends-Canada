@@ -77,3 +77,17 @@ alc_cat_fun<-
     if_else2(ALWDWKY == "NA(b)" | ALC_1 == "NA(b)"|DHH_SEX== "NA(b)", tagged_na("b"), tagged_na("a"))
     )))))))))
   }
+
+# Number of risk factors (poster)
+risk_factor_fun<-
+  function(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3){
+    HT <- if_else2(CCC_071 == 1, 1, 0)
+    Diabetes <- if_else2(CCC_101 == 1, 1, 0)
+    BMI <- if_else2(HWTGBMI_der_cat4 %in% c(3:4), 1, 0)
+    Activity <- if_else2(activity=="Inactive", 1, 0)
+    Smoke <- if_else2(SMKDSTY_cat3 == 1, 1, 0)
+    
+    number_factor <- HT +Diabetes + BMI + Activity + Smoke
+    return(number_factor)
+  }
+

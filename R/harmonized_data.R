@@ -69,7 +69,12 @@ harmonized_combined <- harmonized_combined %>%
                               GEOGPRV == 60 ~ "Yukon/NWT/Nunavut")) %>%
   mutate(activity = case_when(energy_exp < 1.5 ~ "Inactive",
                               energy_exp >= 1.5 & energy_exp < 3 ~ "Moderately active",
-                              energy_exp >= 3 ~ "Active"))
+                              energy_exp >= 3 ~ "Active")) %>%
+  mutate(Age_Group = case_when(DHHGAGE_C %in% c(1:6) ~ "12-34",
+                               DHHGAGE_C %in% c(7:9) ~ "35-49",
+                               DHHGAGE_C %in% c(10:12) ~ "50-64",
+                               DHHGAGE_C %in% c(13:14) ~ "65-74",
+                               DHHGAGE_C %in% c(15:16) ~ "75+"))
 
 # Remove NA immigration population
 harmonized_combined <-harmonized_combined %>%
@@ -78,4 +83,5 @@ harmonized_combined <-harmonized_combined %>%
 # Add # of risk factors
 attach(harmonized_combined)
 harmonized_combined$Alcohol <-alc_cat_fun(DHH_SEX, ALC_1, ALWDWKY)
+harmonized_combined$Risk_factor<-risk_factor_fun(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3)
 
