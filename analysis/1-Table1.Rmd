@@ -57,10 +57,10 @@ T1$CCC_075 <-
 levels(T1$CCC_075)
 
 # Drinking
-T1$low_drink_score <-
-  factor(T1$low_drink_score, levels=c(1:4),
-         labels=c('Low risk', 'Marginal', 'Medium risk','High risk'))
-levels(T1$low_drink_score)
+T1$Alcohol <-
+  factor(T1$Alcohol, levels=c(1:5),
+         labels=c('Non-drinker', 'Light drinker', 'Moderate drinker','Heavy drinker', 'Binge drinker'))
+levels(T1$Alcohol)
 
 # Smoking
 T1$SMKDSTY_cat3 <-
@@ -79,15 +79,19 @@ levels(T1$year)
 # Province
 T1$Province <- as.factor(T1$Province)
 levels(T1$Province)
+
+# Age
+T1$Age_Group <- as.factor(T1$Age_Group)
+levels(T1$Age_Group)
 ```
 
-```{r Rename titles}
+```{r Rename titles, message=FALSE, warning=FALSE}
 T1 <- T1 %>%
-  select(DHHGAGE_cont, DHH_SEX,Province,immigration_der,HWTGBMI_der_cat4,CCC_071,CCC_075,
-         CCC_101,low_drink_score,SMKDSTY_cat3,activity, year, WTS_M) %>%
-  rename('Age'=DHHGAGE_cont,'Sex'=DHH_SEX, 'Immigration'=immigration_der, 'Body Mass Index (BMI)'=HWTGBMI_der_cat4,
+  select(Age_Group, DHH_SEX,Province,immigration_der,HWTGBMI_der_cat4,CCC_071,CCC_075,
+         CCC_101,Alcohol,SMKDSTY_cat3,activity, year, WTS_M) %>%
+  rename('Age'=Age_Group,'Sex'=DHH_SEX, 'Immigration'=immigration_der, 'Body Mass Index (BMI)'=HWTGBMI_der_cat4,
          'Leisure activity'=activity,'Hypertension'=CCC_071,'Blood cholesterol'=CCC_075,
-         'Diabetes'=CCC_101,'Low-risk drinking score'=low_drink_score,'Smoking status'=SMKDSTY_cat3, "Year"=year)
+         'Diabetes'=CCC_101,'Smoking status'=SMKDSTY_cat3, "Year"=year)
 colnames(T1)
 ```
 
@@ -116,14 +120,16 @@ tb1_sex<- print(tableOne_sex)
 ```{r Table 1 stratified by sex (weight and unweighted)}
 myVars_sex <- c('Year','Province','Age','Immigration', 'Body Mass Index (BMI)',
          'Leisure activity','Hypertension','Blood cholesterol',
-         'Diabetes','Low-risk drinking score','Smoking status','Sex')
-t1_unweighted <- gtsummary::tbl_summary(data=T1, by='Sex',
+         'Diabetes','Alcohol','Smoking status','Sex')
+T1_unweighted <- T1%>%
+  select(-WTS_M)
+t1_unweighted <- gtsummary::tbl_summary(data=T1_unweighted, by='Sex',
                                          missing = "no")
 t1_design <- survey::svydesign(id=~0, weights=~WTS_M, data=T1)
 t1_weighted <-gtsummary::tbl_svysummary(data =t1_design, by = 'Sex',
                                         missing = "no")
 t1_sex<-gtsummary::tbl_merge(tbls = list(t1_unweighted, t1_weighted),
           tab_spanner=c("**Unweighted**","**Weighted**"))
-m<-print(t1_sex)
+t1_sex_final<-print(t1_sex)
 ```
 

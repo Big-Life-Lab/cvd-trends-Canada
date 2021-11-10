@@ -21,16 +21,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r Hypertension}
 library(tidyr)
 library(dplyr)
+library(gtsummary)
 ht_pt <-harmonized_combined %>% 
   filter(CCC_071 == 1) %>%
-  select(year,Province,WTS_M)%>%
+  select(year,Province,WTS_M) %>%
   rename('Hypertension'=Province)
 
-ht_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=ht_pt) %>%
-  gtsummary::tbl_svysummary(by = 'year', 
-                            statistic = 'Hypertension' ~"{p}",
-                            missing = "no") 
+ht_tb <-survey::svydesign(id=~0,  weights=~WTS_M, data=ht_pt) %>%
+  tbl_svysummary(by = 'year', statistic = 'Hypertension' ~"{p}", missing = "no")%>%
+  bold_labels()
 h<-print(ht_tb)
+
 ```
 
 ## Diabetes
@@ -43,9 +44,8 @@ db_pt <-harmonized_combined %>%
   rename('Diabetes'=Province)
 
 db_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=db_pt) %>%
-  gtsummary::tbl_svysummary(by = 'year', 
-                            statistic = 'Diabetes' ~"{p}",
-                            missing = "no") 
+  tbl_svysummary(by = 'year',statistic = 'Diabetes' ~"{p}", missing = "no") %>%
+  bold_labels()
 h<-print(db_tb)
 ```
 
@@ -60,7 +60,8 @@ bc_pt <-harmonized_combined %>%
 bc_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=bc_pt) %>%
   gtsummary::tbl_svysummary(by = 'year', 
                             statistic = 'High blood cholesterol' ~"{p}",
-                            missing = "no") 
+                            missing = "no")  %>%
+  bold_labels()
 h<-print(bc_tb)
 
 ```
@@ -75,7 +76,8 @@ bmi_pt <-harmonized_combined %>%
 bmi_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=bmi_pt) %>%
   gtsummary::tbl_svysummary(by = 'year', 
                             statistic = 'Obesity' ~"{p}",
-                            missing = "no") 
+                            missing = "no")  %>%
+  bold_labels()
 h<-print(bmi_tb)
 
 
@@ -91,7 +93,8 @@ mets_pt <-harmonized_combined %>%
 mets_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=mets_pt) %>%
   gtsummary::tbl_svysummary(by = 'year', 
                             statistic = 'Physical inactivity' ~"{p}",
-                            missing = "no") 
+                            missing = "no")  %>%
+  bold_labels()
 h<-print(mets_tb)
 
 ```
@@ -106,32 +109,29 @@ smoke_pt <-harmonized_combined %>%
 smoke_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=smoke_pt) %>%
   gtsummary::tbl_svysummary(by = 'year', 
                             statistic = 'Current smoker' ~"{p}",
-                            missing = "no") %>%
-  gtsummary::add_p(test=everything()~"chisq.test",
-                   test.args = all_tests("chisq.test") ~ list(var.equal = TRUE))
+                            missing = "no")  %>%
+  bold_labels()
 h<-print(smoke_tb)
 ```
 
 ## Drinking
 ```{r Drinking}
 alc_pt <-harmonized_combined %>%
-  filter(low_drink_score %in% c(3:4)) %>%
+  filter(Alcohol %in% c(4:5)) %>%
   select(year,Province,WTS_M) %>%
-  rename('Drinking'=Province)
+  rename('Alcohol'=Province)
 
 alc_tb <-survey::svydesign(id=~0, weights=~WTS_M, data=alc_pt) %>%
   gtsummary::tbl_svysummary(by = 'year', 
-                            statistic = 'Drinking' ~"{p}",
-                            missing = "no") 
+                            statistic = 'Alcohol' ~"{p}",
+                            missing = "no")  %>%
+  bold_labels()
 h<-print(alc_tb)
-class(alc_tb)
 ```
 
 ## Full table
 ```{r}
-Tb_pt <- gtsummary::tbl_stack(list(alc_tb, bmi_tb,db_tb,ht_tb, mets_tb,smoke_tb)) %>%
-  gtsummary::add_p()
-Tb_pt %>%
-  gtsummary::add_p()
+Tb_pt <- gtsummary::tbl_stack(list(alc_tb, bmi_tb,db_tb,ht_tb, mets_tb,smoke_tb))
+
 ```
 

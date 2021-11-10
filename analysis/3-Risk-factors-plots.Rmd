@@ -15,14 +15,22 @@ library(dplyr)
 library(cchsflow)
 
 plot_data <- harmonized_combined %>%
-  select(year,CCC_071,CCC_101,CCC_075,activity,HWTGBMI_der_cat4,
-         immigration_der,low_drink_score,SMKDSTY_cat3,WTS_M)
+  select(year,Province, CCC_071,CCC_101,CCC_075,activity,HWTGBMI_der_cat4,
+         immigration_der,Alcohol,SMKDSTY_cat3,Risk_factor,WTS_M)%>%
+  mutate(Immigration = case_when(immigration_der ==1 ~ "White Canada-born",
+                   immigration_der ==2 ~ "Non-white Canada-born",
+                   immigration_der ==3 ~'White immigrant  (0-9 years in Canada)',
+                   immigration_der ==4 ~'Non-white immigrant (0-9 years in Canada)',
+                   immigration_der ==5 ~'White immigrant (10+ years in Canada)',
+                   immigration_der ==6 ~'Non-white immigrant (10+ years in Canada)'
+))
 
 ## Weighted population by year and immigration
 pop_weight <- plot_data %>%
-  select(year, immigration_der, CCC_071, WTS_M)%>%
-  group_by(year, immigration_der)%>%
+  select(year, Immigration, WTS_M)%>%
+  group_by(year, Immigration)%>%
   summarise(Weighted_pop=sum(WTS_M))
+
 ```
 
 
@@ -30,24 +38,24 @@ pop_weight <- plot_data %>%
 ## Hypertension (CCC_075 ==1)
 ht_year <- plot_data %>%
   filter(CCC_071 ==1)%>%
-  select(year, immigration_der, CCC_071, WTS_M) %>%
-  group_by(year, immigration_der)%>%
+  select(year, Immigration, CCC_071, WTS_M) %>%
+  group_by(year, Immigration)%>%
   summarise(Total=n(),Weight=sum(WTS_M))
 ht_year$Prevalence<-ht_year$Weight/pop_weight$Weighted_pop*100
 
 ## Diabetes (CCC_101 ==1)
 diabetes_year <- plot_data %>%
   filter(CCC_101 ==1)%>%
-  select(year, immigration_der, CCC_101, WTS_M) %>%
-  group_by(year, immigration_der)%>%
+  select(year, Immigration, CCC_101, WTS_M) %>%
+  group_by(year, Immigration)%>%
   summarise(Total=n(),Weight=sum(WTS_M))
 diabetes_year$Prevalence<-diabetes_year$Weight/pop_weight$Weighted_pop*100
 
 ## Blood cholesterol
 bc_year <- plot_data %>%
   filter(CCC_075 ==1)%>%
-  select(year, immigration_der, CCC_075, WTS_M) %>%
-  group_by(year, immigration_der)%>%
+  select(year, Immigration, CCC_075, WTS_M) %>%
+  group_by(year, Immigration)%>%
   summarise(Total=n(),Weight=sum(WTS_M))
 
 # 2015-2017 weights only
@@ -60,41 +68,49 @@ bc_year$Prevalence<-bc_year$Weight/pop_weight2015_2017$Weighted_pop*100
 ## BMI 
 bmi_year <- plot_data %>%
   filter(HWTGBMI_der_cat4 %in% c(3:4))%>%
-  select(year, immigration_der, HWTGBMI_der_cat4, WTS_M) %>%
-  group_by(year, immigration_der)%>%
+  select(year, Immigration, HWTGBMI_der_cat4, WTS_M) %>%
+  group_by(year, Immigration)%>%
   summarise(Total=n(),Weight=sum(WTS_M))
 bmi_year$Prevalence<-bmi_year$Weight/pop_weight$Weighted_pop*100
 
 ## Drinking
 alc_year <- plot_data %>%
-  filter(low_drink_score %in% c(3:4))%>%
-  select(year, immigration_der, low_drink_score, WTS_M) %>%
-  group_by(year, immigration_der)%>%
+  filter(Alcohol %in% c(4:5))%>%
+  select(year, Immigration, Alcohol, WTS_M) %>%
+  group_by(year, Immigration)%>%
   summarise(Total=n(),Weight=sum(WTS_M))
 alc_year$Prevalence<-alc_year$Weight/pop_weight$Weighted_pop*100
 
 ## Smoking
 smoke_year <- plot_data %>%
   filter(SMKDSTY_cat3 == 1)%>%
-  select(year, immigration_der, SMKDSTY_cat3, WTS_M) %>%
-  group_by(year, immigration_der)%>%
+  select(year, Immigration, SMKDSTY_cat3, WTS_M) %>%
+  group_by(year, Immigration)%>%
   summarise(Total=n(),Weight=sum(WTS_M))
 smoke_year$Prevalence<-smoke_year$Weight/pop_weight$Weighted_pop*100
 
 ## Activity
 activity_year <- plot_data %>%
   filter(activity == "Inactive")%>%
-  select(year, immigration_der, activity, WTS_M) %>%
-  group_by(year, immigration_der)%>%
+  select(year, Immigration, activity, WTS_M) %>%
+  group_by(year, Immigration)%>%
   summarise(Total=n(),Weight=sum(WTS_M))
 activity_year$Prevalence<-activity_year$Weight/pop_weight$Weighted_pop*100
+
+## 2+ risk factors
+rf_year <- plot_data %>%
+  filter(Risk_factor >= 2)%>%
+  select(year, Immigration, Risk_factor, WTS_M) %>%
+  group_by(year, Immigration)%>%
+  summarise(Total=n(),Weight=sum(WTS_M))
+rf_year$Prevalence<-rf_year$Weight/pop_weight$Weighted_pop*100
 
 ```
 
 ```{r Plots}
-plot_ht <- ggplot(ht_year, aes(x=year, y=Prevalence))+
-  geom_point(aes(colour=immigration_der)) +
-  geom_line(aes(colour=immigration_der))+
+plot_ht <- ggplot(ht_year, aes(x=year, y=Prevalence,))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
   ylab("Prevalence (%)")+
   xlab("Year")+
   ggtitle("Hypertension")+
@@ -106,11 +122,12 @@ plot_ht <- ggplot(ht_year, aes(x=year, y=Prevalence))+
         # panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(colour = "black", fill=NA))+
-  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
 
 plot_diabetes <- ggplot(diabetes_year, aes(x=year, y=Prevalence))+
-  geom_point(aes(colour=immigration_der)) +
-  geom_line(aes(colour=immigration_der))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
   ylab("Prevalence (%)")+
   xlab("Year")+
   ggtitle("Diabetes")+
@@ -122,11 +139,12 @@ plot_diabetes <- ggplot(diabetes_year, aes(x=year, y=Prevalence))+
         # panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(colour = "black", fill=NA))+
-  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
 
 plot_bc <- ggplot(bc_year, aes(x=year, y=Prevalence))+
-  geom_point(aes(colour=immigration_der)) +
-  geom_line(aes(colour=immigration_der))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
   ylab("Prevalence (%)")+
   ggtitle("High blood cholesterol")+
   xlab("Year")+
@@ -138,11 +156,12 @@ plot_bc <- ggplot(bc_year, aes(x=year, y=Prevalence))+
         # panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(colour = "black", fill=NA))+
-  scale_x_discrete(limits=c(2015,2017))
+  scale_x_discrete(limits=c(2015,2017))+ 
+  scale_color_brewer(palette = "Paired")
 
 plot_bmi <- ggplot(bmi_year, aes(x=year, y=Prevalence))+
-  geom_point(aes(colour=(immigration_der))) +
-  geom_line(aes(colour=(immigration_der)))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
   ylab("Prevalence (%)")+
   ggtitle("Obesity")+
   xlab("Year")+
@@ -154,12 +173,13 @@ plot_bmi <- ggplot(bmi_year, aes(x=year, y=Prevalence))+
         # panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(colour = "black", fill=NA))+
-  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
 
 
 plot_alc <- ggplot(alc_year, aes(x=year, y=Prevalence))+
-  geom_point(aes(colour=(immigration_der))) +
-  geom_line(aes(colour=(immigration_der)))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
   ylab("Prevalence (%)")+
   xlab("Year")+
   ggtitle("Alcohol")+
@@ -171,14 +191,15 @@ plot_alc <- ggplot(alc_year, aes(x=year, y=Prevalence))+
         # panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(colour = "black", fill=NA))+
-  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
 
 plot_smoke <- ggplot(smoke_year, aes(x=year, y=Prevalence))+
-  geom_point(aes(colour=(immigration_der))) +
-  geom_line(aes(colour=(immigration_der)))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
   ylab("Prevalence (%)")+
   xlab("Year")+
-  ggtitle("Smoker")+
+  ggtitle("Current smoker")+
   labs(colours="Immigration Groups")+
   theme(plot.title = element_text(hjust = 0.5),
         # legend.position = "none", 
@@ -187,11 +208,12 @@ plot_smoke <- ggplot(smoke_year, aes(x=year, y=Prevalence))+
         # panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(colour = "black", fill=NA))+
-  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
 
 plot_activity <- ggplot(activity_year, aes(x=year, y=Prevalence))+
-  geom_point(aes(colour=(immigration_der))) +
-  geom_line(aes(colour=(immigration_der)))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
   ylab("Prevalence (%)")+
   xlab("Year")+
   ggtitle("Inactivity")+
@@ -203,7 +225,35 @@ plot_activity <- ggplot(activity_year, aes(x=year, y=Prevalence))+
         # panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(colour = "black", fill=NA))+
-  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
+
+plot_rf <- ggplot(rf_year, aes(x=year, y=Prevalence))+
+ geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
+  ylab("Prevalence (%)")+
+  xlab("Year")+
+  ggtitle("2+ risk factors")+
+  labs(colours="Immigration Groups")+
+  theme(plot.title = element_text(hjust = 0.5),
+        # legend.position = "none", 
+        # panel.grid.major = element_blank(), 
+        # panel.grid.minor = element_blank(),
+        # panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(colour = "black", fill=NA))+
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
+
+library(plotly)
+ggplotly(plot_ht)
+ggplotly(plot_diabetes)
+ggplotly(plot_bc)
+ggplotly(plot_bmi)
+ggplotly(plot_alc)
+ggplotly(plot_smoke)
+ggplotly(plot_activity)
+ggplotly(plot_rf)
 ```
 
 
@@ -213,5 +263,7 @@ figure2 <- ggarrange(plot_ht,plot_diabetes,plot_bc,
                      plot_bmi,plot_alc,plot_smoke,plot_activity, ncol=2, nrow=2, common.legend = TRUE)
 
 figure2
+figure_poster <- ggarrange(plot_ht,plot_diabetes,plot_bmi,plot_smoke,plot_activity, plot_rf, ncol=3, nrow=2, common.legend = TRUE)
+figure_poster
 ```
 
