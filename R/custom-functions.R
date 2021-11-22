@@ -68,26 +68,26 @@ alc_cat_fun<-
     # Moderate
     if_else2(ALC_1 ==1 & DHH_SEX ==1 & ALWDWKY %in% c(5:9), 3,
     if_else2(ALC_1 ==1 & DHH_SEX ==2 & ALWDWKY %in% c(3:5), 3,
-    # Heavy
-    if_else2(ALC_1 ==1 & DHH_SEX ==1 & ALWDWKY %in% c(10:24), 4,
-    if_else2(ALC_1 ==1 & DHH_SEX ==2 & ALWDWKY %in% c(6:17), 4,
-    # Binge 
-    if_else2(ALC_1 ==1 & DHH_SEX ==1 & ALWDWKY > 24, 5,
-    if_else2(ALC_1 ==1 & DHH_SEX ==2 & ALWDWKY > 17, 5,
+    # Heavy and binge
+    if_else2(ALC_1 ==1 & DHH_SEX ==1 & ALWDWKY >= 10, 4,
+    if_else2(ALC_1 ==1 & DHH_SEX ==2 & ALWDWKY >= 6, 4,
+    
     if_else2(ALWDWKY == "NA(b)" | ALC_1 == "NA(b)"|DHH_SEX== "NA(b)", tagged_na("b"), tagged_na("a"))
-    )))))))))
+    )))))))
   }
 
-# Number of risk factors (poster)
+# Number of risk factors
 risk_factor_fun<-
-  function(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3){
+  function(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3, Alcohol, CCC_075){
     HT <- if_else2(CCC_071 == 1, 1, 0)
     Diabetes <- if_else2(CCC_101 == 1, 1, 0)
-    BMI <- if_else2(HWTGBMI_der_cat4 %in% c(3:4), 1, 0)
+    BMI <- if_else2(HWTGBMI_der_cat4 ==4, 1, 0)
     Activity <- if_else2(activity=="Inactive", 1, 0)
     Smoke <- if_else2(SMKDSTY_cat3 == 1, 1, 0)
+    Alcohol1 <- if_else2(Alcohol == 4, 1, 0)
+    BloodCholesterol <- if_else2(CCC_075 ==1,1,0)
     
-    number_factor <- HT +Diabetes + BMI + Activity + Smoke
+    number_factor <- HT +Diabetes + BMI + Activity + Smoke + Alcohol1 + BloodCholesterol
     return(number_factor)
   }
 

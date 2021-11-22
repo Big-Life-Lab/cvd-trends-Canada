@@ -83,5 +83,5 @@ harmonized_combined <-harmonized_combined %>%
 # Add # of risk factors
 attach(harmonized_combined)
 harmonized_combined$Alcohol <-alc_cat_fun(DHH_SEX, ALC_1, ALWDWKY)
-harmonized_combined$Risk_factor<-risk_factor_fun(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3)
+harmonized_combined$Risk_factor<-risk_factor_fun(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3, Alcohol, CCC_075)
 
