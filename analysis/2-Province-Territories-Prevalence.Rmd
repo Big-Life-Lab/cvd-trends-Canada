@@ -1,0 +1,116 @@
+---
+title: "Prevalence by province"
+author: "Kitty Chen"
+date: "26/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# weight_year <- harmonized_combined %>%
+#   select(year, WTS_M)%>%
+#   group_by(year)%>%
+#   summarise(Weighted_pop=sum(WTS_M))
+```
+
+## Hypertension
+
+```{r Hypertension}
+library(srvyr)
+library(dplyr)
+library(tidyr)
+
+svy_design <- as_survey_design(.data=harmonized_combined, weights="WTS_M")
+ht_pt <-svy_design %>%
+  group_by(year,Province, CCC_071) %>%
+  summarise(proportion = survey_mean()*100) %>%
+  filter(CCC_071 == 1) %>% 
+  select(-proportion_se)%>%
+  spread(year, proportion) %>%
+  mutate(diff = ((`2017` - `2001`) / `2001`*100))
+ht_pt
+```
+
+## Diabetes
+
+```{r Diabetes}
+db_pt <-svy_design %>%
+  group_by(year,Province, CCC_101) %>%
+  summarise(proportion = survey_mean()*100) %>%
+  filter(CCC_101 == 1) %>% 
+  select(-proportion_se)%>%
+  spread(year, proportion) %>%
+  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
+db_pt
+```
+
+## Blood cholesterol
+
+```{r Blood cholesterol}
+bc_pt <-svy_design %>%
+  group_by(year,Province, CCC_075) %>%
+  summarise(proportion = survey_mean()*100) %>%
+  filter(CCC_075 == 1) %>% 
+  select(-proportion_se)%>%
+  spread(year, proportion) %>%
+  mutate(diff = ((`2017` - `2015`) / `2015`*100)) 
+bc_pt
+```
+
+## Obesity
+```{r Obesity}
+bmi_pt <-svy_design %>%
+  group_by(year,Province,HWTGBMI_der_cat4) %>%
+  summarise(proportion = survey_mean()*100) %>%
+  filter(HWTGBMI_der_cat4 == 4) %>% 
+  select(-proportion_se)%>%
+  spread(year, proportion) %>%
+  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
+bmi_pt
+```
+
+## Inactivity
+```{r Physical inactivity}
+mets_pt <-svy_design %>%
+  group_by(year,Province, activity) %>%
+  summarise(proportion = survey_mean()*100) %>%
+  filter(activity=="Inactive") %>% 
+  select(-proportion_se)%>%
+  spread(year, proportion) %>%
+  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
+mets_pt
+```
+
+## Smoking
+```{r Smoking}
+smoke_pt <-svy_design %>%
+  group_by(year,Province, SMKDSTY_cat3) %>%
+  summarise(proportion = survey_mean()*100) %>%
+  filter(SMKDSTY_cat3 == 1) %>% 
+  select(-proportion_se)%>%
+  spread(year, proportion) %>%
+  mutate(diff = ((`2017` - `2001`) / `2001`*100))
+smoke_pt
+```
+
+## Drinking
+```{r Drinking}
+alc_pt <-svy_design %>%
+  group_by(year,Province, Alcohol) %>%
+  summarise(proportion = survey_mean()*100) %>%
+  filter(Alcohol == 4) %>% 
+  select(-proportion_se)%>%
+  spread(year, proportion) %>%
+  mutate(diff = ((`2017` - `2001`) / `2001`*100))
+alc_pt
+```
+
+## Full table
+```{r}
+# Tb_pt <- gtsummary::tbl_stack(list(alc_tb, bmi_tb,db_tb,ht_tb, mets_tb,smoke_tb))
+
+```
+

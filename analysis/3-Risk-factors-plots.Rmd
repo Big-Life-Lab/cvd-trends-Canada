@@ -105,6 +105,15 @@ rf_year <- plot_data %>%
   summarise(Total=n(),Weight=sum(WTS_M))
 rf_year$Prevalence<-rf_year$Weight/pop_weight$Weighted_pop*100
 
+## Heart disease
+hd_year <- plot_data %>%
+  filter(CCC_101 == 1)%>%
+  select(year, Immigration, CCC_101, WTS_M) %>%
+  group_by(year, Immigration)%>%
+  summarise(Total=n(),Weight=sum(WTS_M))
+hd_year$Prevalence<-hd_year$Weight/pop_weight$Weighted_pop*100
+
+
 ```
 
 ```{r Plots}
@@ -245,6 +254,23 @@ plot_rf <- ggplot(rf_year, aes(x=year, y=Prevalence))+
   scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
   scale_color_brewer(palette = "Paired")
 
+plot_hd <- ggplot(hd_year, aes(x=year, y=Prevalence))+
+ geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
+  ylab("Prevalence (%)")+
+  xlab("Year")+
+  ggtitle("Heart disease")+
+  labs(colours="Immigration Groups")+
+  theme(plot.title = element_text(hjust = 0.5),
+        # legend.position = "none", 
+        # panel.grid.major = element_blank(), 
+        # panel.grid.minor = element_blank(),
+        # panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(colour = "black", fill=NA))+
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
+
 library(plotly)
 ggplotly(plot_ht)
 ggplotly(plot_diabetes)
@@ -254,6 +280,7 @@ ggplotly(plot_alc)
 ggplotly(plot_smoke)
 ggplotly(plot_activity)
 ggplotly(plot_rf)
+ggplotly(plot_hd)
 ```
 
 

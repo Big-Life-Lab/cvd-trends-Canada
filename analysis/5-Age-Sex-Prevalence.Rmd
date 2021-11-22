@@ -1,0 +1,31 @@
+---
+title: "5-Age-Sex-Prevalence"
+author: "Kitty Chen"
+date: "22/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r Hypertension}
+library(srvyr)
+library(dplyr)
+library(tidyr)
+
+svy_design <- as_survey_design(.data=harmonized_combined, weights="WTS_M")
+ht1 <-svy_design %>%
+  group_by(year, CCC_071) %>%
+  summarise(proportion = survey_mean()*100) %>%
+  filter(CCC_071 == 1) %>% 
+  select(-proportion_se)%>%
+  spread(year, proportion) %>%
+  mutate(diff = ((`2017` - `2001`) / `2001`*100))
+rownames(ht1)[rownames(ht1)==1]="Hypertension"
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
