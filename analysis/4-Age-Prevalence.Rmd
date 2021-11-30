@@ -9,87 +9,81 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Both sex
-
-```{r Hypertension}
+## Survey design and function
+```{r}
 library(srvyr)
 library(dplyr)
 library(tidyr)
 
+# Design (all)
 svy_design <- as_survey_design(.data=harmonized_combined, weights="WTS_M")
-ht_t1 <-svy_design %>%
-  group_by(year,Age_Group, CCC_071) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_071 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
-ht_t1
+
+# Design (male)
+combined_male <- harmonized_combined %>% filter(DHH_SEX == 1)
+svy_design_male <- as_survey_design(.data=combined_male, weights="WTS_M")
+
+#Design (female)
+combined_female <- harmonized_combined %>% filter(DHH_SEX == 2)
+svy_design_female <- as_survey_design(.data=combined_female, weights="WTS_M")
+
+# Prevalence
+prev <- function(design, sum_var, filter_value){
+  
+  # Prevalence 
+  table <- design %>%
+    group_by(year,Age_Group, {{sum_var}}) %>%
+    summarise(proportion = survey_mean()*100) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-proportion_se, -{{sum_var}})
+  
+  # Generate p-value from regression
+  pval <- summary(lm(proportion ~ Age_Group, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with p-value
+  table <- table %>%
+    spread(year, proportion) %>%
+    mutate(diff = ((`2017` - `2001`) / `2001`*100))
+  table$p_value <- pval_col
+  
+  return(table)
+}
+```
+
+## Both sex
+
+```{r Hypertension}
+ht_t1 <-prev(svy_design, CCC_071, 1)
+ht_t1 
 ```
 
 ```{r Diabetes}
-db_t1 <-svy_design %>%
-  group_by(year,Age_Group, CCC_101) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_101 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
+db_t1 <-prev(svy_design, CCC_101, 1)
 db_t1
 ```
 
 ```{r Blood cholesterol}
-bc_t1 <-svy_design %>%
-  group_by(year,Age_Group, CCC_075) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_075 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2015`) / `2015`*100)) 
+bc_t1 <-prev(svy_design, CCC_075, 1)
 bc_t1
 ```
 
 ```{r Obesity}
-bmi_t1 <-svy_design %>%
-  group_by(year,Age_Group,HWTGBMI_der_cat4) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(HWTGBMI_der_cat4 == 4) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
+bmi_t1 <-prev(svy_design, HWTGBMI_der_cat4, 4)
 bmi_t1
 ```
 
 ```{r Physical inactivity}
-mets_t1 <-svy_design %>%
-  group_by(year,Age_Group, activity) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(activity=="Inactive") %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
+mets_t1 <- prev(svy_design, activity, "Inactive")
 mets_t1
 ```
 
 ```{r Smoking}
-smoke_t1 <-svy_design %>%
-  group_by(year,Age_Group, SMKDSTY_cat3) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(SMKDSTY_cat3 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
+smoke_t1 <- prev(svy_design, SMKDSTY_cat3, 1)
 smoke_t1
 ```
 
 ```{r Drinking}
-alc_t1 <-svy_design %>%
-  group_by(year,Age_Group, Alcohol) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(Alcohol == 4) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
+alc_t1 <-prev(svy_design, Alcohol, 4)
 alc_t1
 ```
 
@@ -101,86 +95,38 @@ alc_t1
 ## Male
 
 ```{r Hypertension}
-library(srvyr)
-library(dplyr)
-library(tidyr)
-
-combined_male <- harmonized_combined %>% filter(DHH_SEX == 1)
-svy_design_male <- as_survey_design(.data=combined_male, weights="WTS_M")
-ht_t1_male <-svy_design_male %>%
-  group_by(year,Age_Group, CCC_071) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_071 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
-ht_t1_male
+ht_t1 <-prev(svy_design_male, CCC_071, 1)
+ht_t1 
 ```
 
 ```{r Diabetes}
-db_t1_male <-svy_design_male %>%
-  group_by(year,Age_Group, CCC_101) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_101 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
-db_t1_male
+db_t1 <-prev(svy_design_male, CCC_101, 1)
+db_t1
 ```
 
 ```{r Blood cholesterol}
-bc_t1_male <-svy_design_male %>%
-  group_by(year,Age_Group, CCC_075) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_075 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2015`) / `2015`*100)) 
-bc_t1_male
+bc_t1 <-prev(svy_design_male, CCC_075, 1)
+bc_t1
 ```
 
 ```{r Obesity}
-bmi_t1_male <-svy_design_male %>%
-  group_by(year,Age_Group,HWTGBMI_der_cat4) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(HWTGBMI_der_cat4 == 4) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
-bmi_t1_male
+bmi_t1 <-prev(svy_design_male, HWTGBMI_der_cat4, 4)
+bmi_t1
 ```
 
 ```{r Physical inactivity}
-mets_t1_male <-svy_design_male %>%
-  group_by(year,Age_Group, activity) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(activity=="Inactive") %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
-mets_t1_male
+mets_t1 <- prev(svy_design_male, activity, "Inactive")
+mets_t1
 ```
 
 ```{r Smoking}
-smoke_t1_male <-svy_design_male %>%
-  group_by(year,Age_Group, SMKDSTY_cat3) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(SMKDSTY_cat3 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
-smoke_t1_male
+smoke_t1 <- prev(svy_design_male, SMKDSTY_cat3, 1)
+smoke_t1
 ```
 
 ```{r Drinking}
-alc_t1_male <-svy_design_male %>%
-  group_by(year,Age_Group, Alcohol) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(Alcohol == 4) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
-alc_t1_male
+alc_t1 <-prev(svy_design_male, Alcohol, 4)
+alc_t1
 ```
 
 ```{r Full table}
@@ -191,90 +137,40 @@ alc_t1_male
 ## Female
 
 ```{r Hypertension}
-library(srvyr)
-library(dplyr)
-library(tidyr)
-
-combined_female <- harmonized_combined %>% filter(DHH_SEX == 2)
-svy_design_female <- as_survey_design(.data=combined_female, weights="WTS_M")
-ht_t1_female <-svy_design_female %>%
-  group_by(year,Age_Group, CCC_071) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_071 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
-ht_t1_female
+ht_t1 <-prev(svy_design_female, CCC_071, 1)
+ht_t1 
 ```
 
 ```{r Diabetes}
-db_t1_female <-svy_design_female %>%
-  group_by(year,Age_Group, CCC_101) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_101 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
-db_t1_female
+db_t1 <-prev(svy_design_female, CCC_101, 1)
+db_t1
 ```
 
 ```{r Blood cholesterol}
-bc_t1_female <-svy_design_female %>%
-  group_by(year,Age_Group, CCC_075) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_075 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2015`) / `2015`*100)) 
-bc_t1_female
+bc_t1 <-prev(svy_design_female, CCC_075, 1)
+bc_t1
 ```
 
 ```{r Obesity}
-bmi_t1_female <-svy_design_female %>%
-  group_by(year,Age_Group,HWTGBMI_der_cat4) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(HWTGBMI_der_cat4 == 4) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
-bmi_t1_female
+bmi_t1 <-prev(svy_design_female, HWTGBMI_der_cat4, 4)
+bmi_t1
 ```
 
 ```{r Physical inactivity}
-mets_t1_female <-svy_design_female %>%
-  group_by(year,Age_Group, activity) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(activity=="Inactive") %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100)) 
-mets_t1_female
+mets_t1 <- prev(svy_design_female, activity, "Inactive")
+mets_t1
 ```
 
 ```{r Smoking}
-smoke_t1_female <-svy_design_female %>%
-  group_by(year,Age_Group, SMKDSTY_cat3) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(SMKDSTY_cat3 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
-smoke_t1_female
+smoke_t1 <- prev(svy_design_female, SMKDSTY_cat3, 1)
+smoke_t1
 ```
-
 
 ```{r Drinking}
-alc_t1_female <-svy_design_female %>%
-  group_by(year,Age_Group, Alcohol) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(Alcohol == 4) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
-alc_t1_female
+alc_t1 <-prev(svy_design_female, Alcohol, 4)
+alc_t1
 ```
 
-```{r}
 ```{r Full table}
 # Tb_t1 <- gtsummary::tbl_stack(list(alc_tb, bmi_tb,db_tb,ht_tb, mets_tb,smoke_tb))
 
