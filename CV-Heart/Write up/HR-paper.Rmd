@@ -1,0 +1,41 @@
+---
+title: "HR-paper"
+output: 
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+  bibliography: ../bibliography.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(knitr)
+library(kableExtra)
+library(cchsflow)
+```
+
+## Abstract
+
+Keyword
+
+
+## Introduction
+
+
+## Methods
+
+## Results
+
+## Discussion
+
+\pagebreak
+
+## References
+
+::: {#refs}
+:::
+
+\pagebreak
