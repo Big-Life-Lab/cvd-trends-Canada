@@ -76,7 +76,7 @@ alc_cat_fun<-
     )))))))
   }
 
-# Number of risk factors
+# Number of risk factors (0,1,2+)
 risk_factor_fun<-
   function(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3, Alcohol, CCC_075){
     HT <- if_else2(CCC_071 == 1, 1, 0)
@@ -88,6 +88,10 @@ risk_factor_fun<-
     BloodCholesterol <- if_else2(CCC_075 ==1,1,0)
     
     number_factor <- HT +Diabetes + BMI + Activity + Smoke + Alcohol1 + BloodCholesterol
-    return(number_factor)
-  }
+    
+    factor2 <-if_else2(number_factor == 0, 0,
+                       if_else2(number_factor == 1, 1,
+                                if_else2(number_factor >= 2, "2+", NA)))
 
+    return(factor2)
+  }

@@ -1,0 +1,65 @@
+---
+title: "6-2+-Risk-Factors"
+author: "Kitty Chen"
+date: "15/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+library(srvyr)
+library(dplyr)
+library(tidyr)
+library(survey)
+library(huxtable)
+
+# Design
+svy_design <- as_survey_design(.data=harmonized_combined, weights="WTS_M")
+
+#2011 census population standardization (age and sex)
+pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
+
+# Prevalence for provinces and territories
+prev_2 <- function(design, sum_var, filter_value, stdpop){
+  
+  # Prevalence 
+  table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = survey_mean()*100) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-Prevalence_se, -{{sum_var}})
+  
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ Immigration, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with p-value
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  return(table1)
+}
+
+```
+
+```{r 2+ risk factors}
+rf2<-prev_2(svy_design, Risk_factor, "2+", pop2011)
+
+rf2_df<-as.data.frame(rf2)
+all_rf <- as_hux(rf2_df) %>%
+  theme_article()%>%
+  set_top_border()
+
+```
+
