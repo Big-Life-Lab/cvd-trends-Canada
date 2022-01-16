@@ -1,0 +1,22 @@
+---
+title: "7-Heart-disease"
+author: "Kitty Chen"
+date: "15/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+hd_age<-prev(svy_design, CCC_121, 1, pop2011)
+hd_pt<-prev_pt(svy_design, CCC_121, 1, pop2011)
+hd_imm <- prev_2(svy_design, CCC_121, 1, pop2011)
+hd_male<-prev_as(svy_design_male, CCC_121, 1, pop2011_male, "Male")
+hd_female <-prev_as(svy_design_female, CCC_121, 1, pop2011_female, "Female")
+
+```
+

@@ -11,21 +11,154 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## R Markdown
 
-```{r Hypertension}
+```{r Design and functions}
 library(srvyr)
 library(dplyr)
 library(tidyr)
+library(survey)
+library(tibble)
 
+# Design (all)
 svy_design <- as_survey_design(.data=harmonized_combined, weights="WTS_M")
-ht1 <-svy_design %>%
-  group_by(year, CCC_071) %>%
-  summarise(proportion = survey_mean()*100) %>%
-  filter(CCC_071 == 1) %>% 
-  select(-proportion_se)%>%
-  spread(year, proportion) %>%
-  mutate(diff = ((`2017` - `2001`) / `2001`*100))
-rownames(ht1)[rownames(ht1)==1]="Hypertension"
 
+# Design (male)
+combined_male <- harmonized_combined %>% filter(DHH_SEX == 1)
+svy_design_male <- as_survey_design(.data=combined_male, weights="WTS_M")
+
+#Design (female)
+combined_female <- harmonized_combined %>% filter(DHH_SEX == 2)
+svy_design_female <- as_survey_design(.data=combined_female, weights="WTS_M")
+
+#2011 census population standardization
+pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
+pop2011_male <-c(4962765,3524640,3459035,1281440,917340)
+pop2011_female <-c(4910365,3649325,3593270,1393345,1352950)
+
+# Prevalence (adjusted for age and sex)
+prev_as <- function(design, sum_var, filter_value, stdpop, title){
+  
+  # Prevalence 
+  table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,{{sum_var}}) %>%
+    summarise(Prevalence = survey_mean()*100) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-Prevalence_se, -{{sum_var}})
+
+  # Generate p-value from regression (age and sex adjusted)
+  pval <- summary(lm(Prevalence ~ year, data = table))
+  pval_col <-as.numeric(pval$coefficients[2,"Pr(>|t|)"])
+
+  # Complete table with p-value
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add characteristic name
+  table1 <- table1 %>%
+    add_column(Characteristic = title, .before = "2001")
+  
+  
+  table1 <- table1 %>%
+  return(table1)
+}
+
+prev_as_bc <- function(design, sum_var, filter_value, stdpop, title){
+  
+  # Prevalence 
+  table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,{{sum_var}}) %>%
+    summarise(Prevalence = survey_mean()*100) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-Prevalence_se, -{{sum_var}})
+
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ year, data = table))
+  pval_col <-as.numeric(pval$coefficients[2,"Pr(>|t|)"])
+
+  # Complete table with p-value
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2015`) / `2015`*100))
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add characteristic name and add empty column
+  table1 <- table1 %>%
+    add_column("2001" = "-", .before = "2015")%>%
+    add_column("2003" = "-", .before = "2015")%>%
+    add_column("2005" = "-", .before = "2015")%>%
+    add_column("2007" = "-", .before = "2015")%>%
+    add_column("2009" = "-", .before = "2015")%>%
+    add_column("2011" = "-", .before = "2015")%>%
+    add_column("2013" = "-", .before = "2015") %>%
+    add_column(Characteristic = title, .before = "2001")
+  
+  return(table1)
+}
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r All}
+ht_as <- prev_as(svy_design, CCC_071, 1, pop2011, "Hypertension")
+db_as <-prev_as(svy_design, CCC_101, 1, pop2011, "Diabetes")
+bc_as <-prev_as_bc(svy_design, CCC_075, 1, pop2011, "High blood cholesterol")
+bmi_as <-prev_as(svy_design, HWTGBMI_der_cat4, 4, pop2011, "Obesity")
+mets_as <- prev_as(svy_design, activity, "Inactive", pop2011, "Physical inactivity")
+smoke_as <- prev_as(svy_design, SMKDSTY_cat3, 1, pop2011, "Current smoker")
+alc_as <-prev_as(svy_design, Alcohol, 4, pop2011, "Heavy drinker")
+```
+
+```{r Male, warning=FALSE}
+ht_a_male <- prev_as(svy_design_male, CCC_071, 1, pop2011_male, "Hypertension")
+db_a_male <-prev_as(svy_design_male, CCC_101, 1, pop2011_male, "Diabetes")
+bc_a_male <-prev_as_bc(svy_design_male, CCC_075, 1, pop2011_male, "High blood cholesterol")
+bmi_a_male <-prev_as(svy_design_male, HWTGBMI_der_cat4, 4, pop2011_male, "Obesity")
+mets_a_male <- prev_as(svy_design_male, activity, "Inactive", pop2011_male, "Physical inactivity")
+smoke_a_male <- prev_as(svy_design_male, SMKDSTY_cat3, 1, pop2011_male, "Current smoker")
+alc_a_male <-prev_as(svy_design_male, Alcohol, 4, pop2011_male, "Heavy drinker")
+```
+
+```{r Female, warning=FALSE}
+ht_a_female <- prev_as(svy_design_female, CCC_071, 1, pop2011_female, "Hypertension")
+db_a_female <-prev_as(svy_design_female, CCC_101, 1, pop2011_female, "Diabetes")
+bc_a_female <-prev_as_bc(svy_design_female, CCC_075, 1, pop2011_female, "High blood cholesterol")
+bmi_a_female <-prev_as(svy_design_female, HWTGBMI_der_cat4, 4, pop2011_female, "Obesity")
+mets_a_female <- prev_as(svy_design_female, activity, "Inactive", pop2011_female, "Physical inactivity")
+smoke_a_female <- prev_as(svy_design_female, SMKDSTY_cat3, 1, pop2011_female, "Current smoker")
+alc_a_female <-prev_as(svy_design_female, Alcohol, 4, pop2011_female, "Heavy drinker")
+```
+
+
+```{r Combined - huxtable}
+as <- rbind(ht_as, db_as, bmi_as, mets_as, smoke_as, alc_as, bc_as)
+a_male <- rbind(ht_a_male, db_a_male, bmi_a_male, mets_a_male, smoke_a_male, alc_a_male, bc_a_male)
+a_female <- rbind(ht_a_female, db_a_female, bmi_a_female, mets_a_female, smoke_a_female, alc_a_female, bc_a_female)
+
+all_as <- rbind(as, a_male, a_female) %>%
+  rename("Relative change, %" = Difference,
+         "p-value" = p_value)
+all_as <- as.data.frame(all_as)
+
+library(huxtable)
+
+all_as_hx<-as_hux(all_as)
+all_as_final<-all_as_hx %>%
+  theme_article()%>%
+  insert_row(c("Both", "","","","","","","","","","",""),after = 1) %>%
+  insert_row(c("Male", "","","","","","","","","","",""),after = 9) %>%
+  insert_row(c("Female", "","","","","","","","","","",""),after = 17) %>%
+  set_bold(10,1)%>%
+  set_bold(18,1)%>%
+  set_top_border(row =10) 
+print(all_as_final)
+```
+

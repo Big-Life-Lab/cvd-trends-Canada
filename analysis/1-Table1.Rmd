@@ -27,10 +27,8 @@ T1$Province <- as.factor(T1$Province)
 levels(T1$Province)
 
 # Immigrant group
-T1$immigration_der<- 
-  factor(T1$immigration_der, levels = c(1:6),
-         labels=c('White Canada-born','Non-white Canada-born','White immigrant born outside of Canada (0-9 years in Canada)','Non-white immigrant born outside of Canada (0-9 years in Canada)','White immigrant born outside of Canada (10+ years in Canada)','Non-white immigrant born outside of Canada (10+ years in Canada)'))
-levels(T1$immigration_der)
+T1$Immigration<- as.factor(T1$Immigration)
+levels(T1$Immigration)
 
 # BMI
 T1$HWTGBMI_der_cat4<- 
@@ -58,8 +56,8 @@ levels(T1$CCC_075)
 
 # Drinking
 T1$Alcohol <-
-  factor(T1$Alcohol, levels=c(1:5),
-         labels=c('Non-drinker', 'Light drinker', 'Moderate drinker','Heavy drinker', 'Binge drinker'))
+  factor(T1$Alcohol, levels=c(1:4),
+         labels=c('Non-drinker', 'Light drinker', 'Moderate drinker','Heavy drinker'))
 levels(T1$Alcohol)
 
 # Smoking
@@ -83,44 +81,29 @@ levels(T1$Province)
 # Age
 T1$Age_Group <- as.factor(T1$Age_Group)
 levels(T1$Age_Group)
+
+# Number of risk factors
+T1$Risk_factor <- as.factor(T1$Risk_factor)
+levels(T1$Risk_factor)
+
+# Heart disease
+T1$CCC_121 <- factor(T1$CCC_121, levels=c(1,2),
+         labels=c('Heart disease','No heart disease'))
+levels(T1$CCC_121)
 ```
 
 ```{r Rename titles, message=FALSE, warning=FALSE}
 T1 <- T1 %>%
-  select(Age_Group, DHH_SEX,Province,immigration_der,HWTGBMI_der_cat4,CCC_071,CCC_075,
-         CCC_101,Alcohol,SMKDSTY_cat3,activity, year, WTS_M) %>%
-  rename('Age'=Age_Group,'Sex'=DHH_SEX, 'Immigration'=immigration_der, 'Body Mass Index (BMI)'=HWTGBMI_der_cat4,
+  select(Age_Group, DHH_SEX,Province,Immigration,HWTGBMI_der_cat4,CCC_071,CCC_075,
+         CCC_101,Alcohol,SMKDSTY_cat3,activity, year, Risk_factor, CCC_121, WTS_M) %>%
+  rename('Age'=Age_Group,'Sex'=DHH_SEX, 'Body Mass Index (BMI)'=HWTGBMI_der_cat4,
          'Leisure activity'=activity,'Hypertension'=CCC_071,'Blood cholesterol'=CCC_075,
-         'Diabetes'=CCC_101,'Smoking status'=SMKDSTY_cat3, "Year"=year)
+         'Diabetes'=CCC_101,'Smoking status'=SMKDSTY_cat3, "Year"=year, 'Number of risk factors'= Risk_factor, 
+         'Heart disease'=CCC_121)
 colnames(T1)
 ```
 
- 
-```{r Table 1}
-library(tableone)
-myVars <- c('Sex', 'Immigration', 'Body Mass Index (BMI)',
-         'Leisure activity','Hypertension','Blood cholesterol',
-         'Diabetes','Low-risk drinking score','Smoking status')
-tableOne<- CreateTableOne(vars=myVars,data=T1)
-tb1<- print(tableOne)
-# write.csv(t,"TableOne1.csv")
-
-```
-
-```{r Table 1 stratified by sex}
-library(tableone)
-myVars_sex <- c('Immigration', 'Body Mass Index (BMI)',
-         'Leisure activity','Hypertension','Blood cholesterol',
-         'Diabetes','Low-risk drinking score','Smoking status')
-tableOne_sex<- CreateTableOne(vars=myVars_sex, strata='Sex',data=T1)
-tb1_sex<- print(tableOne_sex)
-# write.csv(tb1_sex,"TableOne_sex.csv")
-```
-
 ```{r Table 1 stratified by sex (weight and unweighted)}
-myVars_sex <- c('Year','Province','Age','Immigration', 'Body Mass Index (BMI)',
-         'Leisure activity','Hypertension','Blood cholesterol',
-         'Diabetes','Alcohol','Smoking status','Sex')
 T1_unweighted <- T1%>%
   select(-WTS_M)
 t1_unweighted <- gtsummary::tbl_summary(data=T1_unweighted, by='Sex',
@@ -131,5 +114,24 @@ t1_weighted <-gtsummary::tbl_svysummary(data =t1_design, by = 'Sex',
 t1_sex<-gtsummary::tbl_merge(tbls = list(t1_unweighted, t1_weighted),
           tab_spanner=c("**Unweighted**","**Weighted**"))
 t1_sex_final<-print(t1_sex)
+```
+
+
+```{r Table 1 (weight and unweighted)}
+library(flextable)
+
+T1_unweighted <- T1%>%
+  select(-WTS_M)
+t1_unweighted <- gtsummary::tbl_summary(data=T1_unweighted,
+                                         missing = "no")
+t1_design <- survey::svydesign(id=~0, weights=~WTS_M, data=T1)
+t1_weighted <-gtsummary::tbl_svysummary(data =t1_design,
+                                        missing = "no")
+t1<-gtsummary::tbl_merge(tbls = list(t1_unweighted, t1_weighted),
+          tab_spanner=c("**Unweighted**","**Weighted**")) %>%
+t1 %>%as_flex_table()
+t1_final<-print(t1)
+gtsummary::tbl_svysummary(data =t1_design, by=Year,
+                                        missing = "no")
 ```
 

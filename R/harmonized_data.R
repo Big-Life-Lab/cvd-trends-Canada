@@ -78,7 +78,14 @@ harmonized_combined <- harmonized_combined %>%
 
 # Remove NA immigration population
 harmonized_combined <-harmonized_combined %>%
-  filter(immigration_der %in% c(1:6))
+  filter(immigration_der %in% c(1:6)) %>%
+  mutate(Immigration = case_when(immigration_der ==1 ~ "White Canada-born",
+                          immigration_der ==2 ~ "Non-white Canada-born",
+                          immigration_der ==3 ~'White immigrant  (0-9 years in Canada)',
+                          immigration_der ==4 ~'Non-white immigrant (0-9 years in Canada)',
+                          immigration_der ==5 ~'White immigrant (10+ years in Canada)',
+                          immigration_der ==6 ~'Non-white immigrant (10+ years in Canada)'
+  ))
 
 # Add # of risk factors
 attach(harmonized_combined)

@@ -13,17 +13,18 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(dplyr)
 library(cchsflow)
+library(plotly)
+library(srvyr)
+library(survey)
 
 plot_data <- harmonized_combined %>%
-  select(year,Province, CCC_071,CCC_101,CCC_075,activity,HWTGBMI_der_cat4,
-         immigration_der,Alcohol,SMKDSTY_cat3,Risk_factor,WTS_M)%>%
-  mutate(Immigration = case_when(immigration_der ==1 ~ "White Canada-born",
-                   immigration_der ==2 ~ "Non-white Canada-born",
-                   immigration_der ==3 ~'White immigrant  (0-9 years in Canada)',
-                   immigration_der ==4 ~'Non-white immigrant (0-9 years in Canada)',
-                   immigration_der ==5 ~'White immigrant (10+ years in Canada)',
-                   immigration_der ==6 ~'Non-white immigrant (10+ years in Canada)'
-))
+  select(year,Province, DHH_SEX, Age_Group, CCC_071,CCC_101,CCC_075,activity,HWTGBMI_der_cat4,
+         Immigration,Alcohol,SMKDSTY_cat3,Risk_factor,WTS_M)
+
+svy_plot <- as_survey_design(.data=plot_data, weights="WTS_M")
+
+#2011 census population standardization (age and sex)
+pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
 
 ## Weighted population by year and immigration
 pop_weight <- plot_data %>%
@@ -32,6 +33,80 @@ pop_weight <- plot_data %>%
   summarise(Weighted_pop=sum(WTS_M))
 
 ```
+
+```{r}
+prev_plot <- function(design, sum_var, filter_value, stdpop, startyear, title){
+  
+  # Prevalence 
+  table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = survey_mean()*100) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-Prevalence_se, -{{sum_var}})
+  
+  # Plot
+  plot <- ggplot(table, aes(x=year, y=Prevalence))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
+  ylab("Prevalence (%)")+
+  xlab("Year")+
+  ggtitle(title)+
+  labs(colours="Migration Groups")+
+  theme(plot.title = element_text(hjust = 0.5),
+        # legend.position = "none", 
+        # panel.grid.major = element_blank(),
+        # panel.grid.minor = element_blank(),
+        # panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(colour = "black", fill=NA))+
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_color_brewer(palette = "Paired")
+  
+  return(plot)
+}
+```
+
+
+```{r Hypertension}
+ht_plot <-prev_plot(svy_plot, CCC_071, 1, pop2011, 2001, "Hypertension")
+ggplotly(ht_plot)
+```
+
+```{r Diabetes}
+db_plot <-prev_plot(svy_design, CCC_101, 1, pop2011, 2001, "Diabetes")
+ggplotly(db_plot)
+```
+
+```{r Blood cholesterol}
+bc_plot <-prev_plot(svy_design, CCC_075, 1, pop2011, 2015, "High blood cholesterol")
+ggplotly(bc_plot)
+```
+
+```{r Obesity}
+bmi_plot <-prev_plot(svy_design, HWTGBMI_der_cat4, 4, pop2011, 2001, "Obesity")
+ggplotly(bmi_plot)
+```
+
+```{r Physical inactivity}
+mets_plot <- prev_plot(svy_design, activity, "Inactive", pop2011, 2001, "Physical inactivity")
+ggplotly(mets_plot)
+```
+
+```{r Smoking}
+smoke_plot <- prev_plot(svy_design, SMKDSTY_cat3, 1, pop2011, 2001, "Current smoker")
+ggplotly(smoke_plot)
+```
+
+```{r Drinking}
+alc_plot <-prev_plot(svy_design, Alcohol, 4, pop2011, 2001, "Alcohol")
+ggplotly(alc_plot)
+```
+
+```{r Heart disease}
+hd_plot <-prev_plot(svy_design, CCC_121, 1, pop2011, 2001, "Heart disease")
+ggplotly(hd_plot)
+```
+
 
 
 ```{r Tables}
