@@ -231,7 +231,7 @@ hux<- function(risk, riskm, riskf, title){
     theme_article()%>%
     insert_row(c("Both", "","","","","","","","","","",""),after = 1) %>%
     insert_row(c("Male", "","","","","","","","","","",""),after = 7) %>%
-    insert_row(c("Female", "","","","","","","","","","",""),after = 12) %>%
+    insert_row(c("Female", "","","","","","","","","","",""),after = 13) %>%
     set_italic(2,1)%>%
     set_italic(8,1)%>%
     set_italic(13,1)%>%
@@ -248,11 +248,10 @@ all_mets_hux <- hux(mets_t1, mets_t1_m, mets_t1_f,"Physical inactivity")
 all_smoke_hux <- hux(smoke_t1, smoke_t1_m, smoke_t1_f,"Current smoker")
 all_alc_hux <- hux(alc_t1, alc_t1_m, alc_t1_f,"Heavy drinker")
 
-cbind.huxtable(all_ht_hux, all_db_hux[-2])
+all_age_final<- rbind(all_ht_hux, all_db_hux[-1,], all_bmi_hux[-1,], all_mets_hux[-1,], all_smoke_hux[-1,], all_alc_hux[-1,], all_bc_hux[-1,])
 ```
 
 ```{r Full table}
-# Tb_t1_f <- gtsummary::tbl_stack(list(alc_tb, bmi_tb,db_tb,ht_tb, mets_tb,smoke_tb))
 library(gt)
 years <- c("2001", "2003", "2005", "2007", "2009", "2011", "2013", "2015", "2017")
 

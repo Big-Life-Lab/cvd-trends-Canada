@@ -57,9 +57,9 @@ prev_2 <- function(design, sum_var, filter_value, stdpop){
 rf2<-prev_2(svy_design, Risk_factor, "2+", pop2011)
 
 rf2_df<-as.data.frame(rf2)
-all_rf <- as_hux(rf2_df) %>%
+all_rf_final <- as_hux(rf2_df) %>%
   theme_article()%>%
   set_top_border()
-
+print(all_rf_final)
 ```
 
