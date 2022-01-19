@@ -1,11 +1,13 @@
 ---
-title: "HR-paper"
-output: 
-  word_document: default
-  pdf_document: default
-  html_document:
-    df_print: paged
-  bibliography: ../bibliography.bib
+title: "Cardiovascular risk health factors and disease among Canadian Immigrants"
+fontsize: 12pt
+linespread: 2
+csl: ../vancouver.csl
+output:
+  word_document: 
+    reference_docx: ../"template.docx"
+bibliography: ../bibliography.bib
+sansfont: Calibri
 ---
 
 ```{r setup, include=FALSE}
@@ -14,22 +16,112 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(knitr)
 library(kableExtra)
-library(cchsflow)
 ```
 
-## Abstract
+**Authors:** 
 
-Keyword
+**Corresponding author information**
+
+**Abstract:** The intersection of immigration and heart health is complex. With the recent advancements in heart disease interventions and prevention in the past few decades, sustained efforts are required to further decrease the development of health disease risk factors. Many risk factors related to cardiovascular disease can be prevented by changes in daily life and in health policy. In recognizing the prevalence of risk factors across sex, age group, ethnic groups, and broad geographical regions, health professionals and program planners can focus their efforts on at-risk population groups. In this study, ideal cardiovascular health was evaluated in Canada’s migrant population. The national trends in cardiovascular disease risk factors, including hypertension, diabetes, smoking, activity levels, alcohol consumption, high blood cholesterol, and obesity were examined using the Canadian Community Health Surveys (CCHS) from 2001 to 2018. The prevalence of each risk factor and combinations of risk factors were examined and compared between immigrant and Canada-born status. During the study period, the prevalence of diabetes, hypertension, and obesity increased for all groups in Canada. Trends in diabetes, hypertension, and obesity were consistent for all provinces, with higher prevalences in the Maritime provinces. Long-term immigrants in Canada have a higher prevalence of CVD risk factors compared to their native-born counterparts. Future strategies should consider migration and geographical gaps when targeted at reducing cardiovascular risk factors for at-risk populations in Canada.
+
+**Keywords:** cardiovascular disease, risk factors, Canada, migrant, health
+
+**Acknowledgments:** This project is supported by a CANHEART SPOR (www.canheart.ca) summer studentship funded through a Canadian Institutes of Health Research (CIHR) Strategy for Patient Oriented Research (SPOR) Innovative Clinical Trial Multi Year Grant (MYG 151211).
+
+**Word count:** Abstract: () ; Text body: ()
+
+**Table and figures:** 7
+
+\pagebreak
+
+## Background
+
+Currently, immigrants make up more than 20% of Canada’s population, and this metric continues to increase. Health status, referring to the quality of life and use of formal and informal health services, differ across all subgroups of immigrants. Certain subpopulations experience a higher risk of chronic diseases such as cancer, diabetes, and heart disease, which has clinical implications for preventative care and provision of health services to migrant populations in Canada (1).
+
+Heart disease is the second leading cause of death in Canada. With the recent advancements in heart disease interventions and preventions in the past few decades, sustained efforts are required to further decrease the development of health disease risk factors (2). Health-related behaviours can impact both quality of life and overall wellbeing by influencing disease outcomes. Behaviours such as smoking, alcohol use, stress, physical activity, and diet are modifiable predictors of numerous health outcomes including type 2 diabetes, cardiovascular disease, and cancer (3,4). Many risk factors related to cardiovascular disease (CVD) and stroke can be prevented by changes in daily life and in health policy. The rank of risk factors that had a significant effect on CVD stroke goes as follows: smoking, high blood pressure, hypertension, physical inactivity, obesity, diabetes, and diet (5). National trends in hypertension, diabetes, obesity, and current smoking have been analyzed, but it does not cover the full spectrum of risk factors associated with high CVD morbidity and mortality (6). 
+
+Previous studies have evaluated CVD risk factors and their association with socioeconomic status over two time periods: 1994-2005 (7,8) and 2005-2016 (9). Less is known about migration factors affecting major CVD risk factors. Research often considers immigrants as a homogenous group and overlooks important ethnic differences (10). With the growing diversity in Canada, a greater understanding of health status and risk factors prevalent in different groups within the population is important to guide culturally appropriate health interventions. In recognizing the prevalence of risk factors across sex, age groups, and broad geographical regions, health professionals and program planners can focus their efforts on specific at-risk groups of the population (8).
+
+In this study, national trends in heart disease and a wider range of risk factors related to cardiovascular disease were examined among the Canadian population aged 12 years or older using the Canadian Community Health Survey (CCHS) from 2000-2018. It is of interest to know how risk factors such as hypertension, diabetes, smoking, activity levels, alcohol consumption, high blood cholesterol, and obesity can influence cardiovascular disease in different regions in Canada, as well as to see how the prevalence of each factor has changed over time across migrant groups.  
+
+## Data and methods
+
+### Study Data
+
+Canadian Community Health Survey (CCHS) is a cross-sectional survey that collects information related to health status, health determinants, and socio-demographic characteristics for non-institutionalized Canadian household population aged 12 and up. The survey covers the ten provinces and the three territories, excluding persons living on First Nations reserves and settlements, full-time members of the Canadian Forces, and institutionalized persons. Data collection was conducted over the phone or in-person, and the data was collected directly from the respondents using computer-assisted personal and telephone interview software. The interview can be conducted in English or French. Each Statistics Canada Regional Office recruited interviewers with a variety of language competencies to remove language barriers. Detailed information about the CCHS is available online (11).
+ 
+In this study, data from the Public Use Microdata Files (PUMF) from Statistics Canada’s 2000-2018 CCHS were used to analyze the risk factors of interest, (2000/2001, 2003/2004, 2005/2006, 2007/2008, 2009/2010, 2011/2012, 2013-/2014, 2015/2016, and 2017/2018). The year for the earliest PUMF was defined as 2001, and subsequent PUMFs were defined for every two-year interval. For example, the 2017/2018 cycle has the cycle year of 2017. The population age was from 12 years and older. Respondents that did not indicate Canadian or immigrant status in the survey were excluded from the analysis. The sample consisted of 1,065,391 respondents across all cycles and was weighted to represent 241 million Canadians (Table 2). The overall response rate across all cycles is greater than 75%. The respondents were stratified by sex and age groups (12–34, 35–49, 50–64, 65–74, and ≥ 75 years), following the age groups of the previous analyses. The participants were based on time spent in Canada, country of birth, immigrant status, and ethnicity. Six immigration groups were generated: white Canada-born, white immigrant (0-9 years since immigration), white immigrant (10+ years since immigration), non-white Canada-born, non-white immigrant (0-9 years since immigration), and non-white immigrant (10+ years since immigration).
 
 
-## Introduction
+### cchsflow
 
+When combining the CCHS cycles from various cycles, the variable names can differ between cycles. To minimize the time required to match the variables with each cycle, the *cchsflow* R package was used to clean and prepare data across CCHS survey data between 2000 to 2018. To combine the cycles from 2000 to 2018, *cchsflow* harmonized the variables such that the same variable type was renamed as a common variable name (12). In addition to the CCHS variables, there were also derived variables from *cchsflow*, such as leisure activity, and binge drinking that was not available in the original CCHS files. The derived variables combined numerous CCHS variables related to the health behaviour of interest to quantify a health behaviour over time.  
 
-## Methods
+### Heart Disease and Cardiovascular Risk Factor Variables 
+
+The current analysis focused on heart disease and seven risk factors, derived from the CCHS. The health behaviours are characterized in Table 1. Heart disease and all risk factors are self-report but had to have been diagnosed by a physician (7).
+
+**Table 1**: Risk factor definitions. Risk health behaviours of interest are marked with (*).
+
+Patients with hypertension were those who have received a diagnosis for this condition from a physician, irrespective of antihypertensive treatment. Respondents with diabetes were defined as patients who have received a diagnosis of diabetes from a physician, regardless of whether they are receiving treatment with insulin or oral hypoglycemic medications. Respondents who had diabetes during pregnancy were defined as not having diabetes. BMI refers to the body mass index, in which a person’s height is divided by the square of their height squared. Obesity was defined as BMI greater than equal to 30 (13). Smoking was based on the respondents’ smoking status (current, former, and never) with current smokers being the status of interest.
+
+In this study, physical inactivity, alcohol consumption, and high blood cholesterol were also included as CVD risk factors. The activity levels of participants were measured using the metabolic equivalents in testing (METs). The MET concept describes exercise intensity and estimates the energy cost from physical activities (14). From CCHS, METs were derived from an aggregate list of leisure-time physical activities related to frequency and duration of activity (15).  Participants with less than 1.5 METs/day were considered physically inactive. The categorization of alcohol consumption was based using the seven-year study and combined heavy drinker and binge drinker as one risk category (16). Blood cholesterol was introduced in the 2015-2016 cycle, therefore its trend was only examined from 2015-2018. Patients with high blood cholesterol/lipids were defined as those who have received a diagnosis for this condition from a physician, irrespective of cholesterol-lowering medication.
+
+### Regional Variations
+
+The prevalence of each risk factor was determined across all provinces and territories in Canada.
+
+### Statistical Analysis
+
+The prevalence and trends of each risk factor were analyzed from 2000 to 2018, adjusting for survey sampling weights, and evaluated using linear regression analysis. All analysis was conducted using R and can be found on GitHub (??). The prevalence of the risk factors was directly standardized for age and sex, using the 2011 Canadian Census population. The time trends in risk factors were stratified by migrant group categories. The relative change from 2000 to 2018 for each risk factor were determined by calculating the percent change in the last year of the study period and the baseline prevalence in 2001. P-values less than 0.05 were considered statistically significant. 
 
 ## Results
 
-## Discussion
+### Study Data
+
+The distribution of the study sample by sex from all cycles is described in Table 2. In 2001, the largest age group was 12-34 years old (35%)  with (49)% males. In 2017, the mean age was() years old with ()% males. The largest group is white Canada born (72%), followed by non-white immigrants (10+ years in Canada) with 8.4%, white immigrants (10+ years in Canada) with 7.8%, non-white Canada-born with 6%, non-white immigrant born (0-9 years in Canada) with 4.8%, and white immigrant (0-9 years in Canada with 1.3%. Approximately 70% of the study sample has at least one of the following risk factors.
+
+**Table 2**: Baseline characteristics of unweighted and weighted total CCHS population from 2000 to 2018, stratified by sex. 
+
+#### Heart disease
+
+Heart disease has decreased over 2000-2018 time period. In 2001, the age-sex standardized prevalence for females and males is 4.95% and 5.67%, respectively. In 2017, the national prevalence for heart disease in females is 4.16% and males with 5.62%, indicating a relative decrease by 0.87% for females and 15.95% for males. In 2018, 1.31 million of the study population has heart disease (57.3% male and 42.7% female). The decrease in heart disease rates is also apparent in migrant groups except for non-white immigrants (10+ years in Canada) with a 20% increase (Figure ). Compared to 2001, the prevalence of heart disease in 2018 decreased by  35% in non-white Canada-born, 1% in white Canada-born, 22% in non-white immigrants (0-9 years in Canada), 42% in white immigrants (0-9 years in Canada), and 12% in white immigrants (10+ years in Canada).
+
+**Figure 1**: Age- and sex-adjusted trends in heart disease from 2000 to 2018, stratified by migrant groups.
+
+### Trends in Risk Factors
+
+National risk factor trends by sex and age group are presented in Table 3. Obesity, diabetes, and hypertension continue to increase in prevalence, while the prevalence of smoking and physical inactivity decrease significantly among males and females. The prevalence of hypertension in males over age 12 years has significantly increased, whereas females at certain age groups have significantly decreased prevalence Table 4. In 2018, physical inactivity has the highest prevalence, followed by hypertension, obesity, current smoker, high blood cholesterol, diabetes, and heavy drinker. Physical inactivity increases among populations aged 65+. Smoking prevalence significantly decreases in all age groups except for ages 35-64.The percent difference in the prevalence of heavy alcohol consumption is calculated from 2001 to 2015. The missing prevalence for certain provinces is because certain questions are asked to specific provinces (?)
+
+**Table 3**: Age- and sex-adjusted prevalence of risk factors for survey respondents aged 12 years and older, from 2000 to 2018.
+
+**Table 4**: Prevalence of risk factors, by age categories, from 2000 to 2018.
+
+### Trends in Risk Factors by Migrant Group
+
+Both white and non-white immigrants (10+ years in Canada) have a higher prevalence than Canada-born populations, however, their time trends are similar to white Canada-born populations (Figure 2). This is true for hypertension, diabetes, high blood cholesterol, and physical inactivity. The prevalence of heavy drinking is lowest among non-white immigrants and highest among white Canada-born. Current smokers are decreasing across all groups with the most drastic decrease in 2015 where non-white populations had the lowest prevalence. The prevalence of physical inactivity is higher in immigrants than Canada-born populations, especially with non-white immigrants with prevalences greater than 50%. Hypertension, obesity, and diabetes continue to grow in all population groups. Obesity is greatest with white Canada-born and white immigrants (10+ years in Canada), and in 2017, the lowest prevalence is observed with immigrants (0-9 years in Canada). Across all risk factors, white Canada-born populations have a higher prevalence compared to non-white Canada-born populations. Having 2 or more risk factors continues to increase in all population groups. 
+
+**Figure 2**: Age- and sex-adjusted prevalence of hypertension, diabetes, obesity, physical inactivity, current smokers, heavy drinkers, and high blood cholesterol from 2000 to 2018, stratified by migrant groups.
+
+### Regional Trends
+
+Diabetes doubles in prevalence in all provinces and territories (Table 5). Diabetes is most prevalent in New Brunswick with a 103% increase (p < 0.01). Although Yukon, Northwestern Territories, and Nunavut have the lowest prevalence in diabetes and hypertension, it has the greatest increase in prevalence for diabetes with 165.25% (p = 0.44) from 2001 to 2018, and hypertension with 77.14% (p = 0.02). Hypertension was most prevalent in New Brunswick, Newfoundland and Labrador, and Nova Scotia, with the greatest increase in New Brunswick (62%, p < 0.01). Obesity is most prevalent in Newfoundland and Labrador, New Brunswick and Yukon/NWT/Nunavut. The greatest increase in prevalence of obesity occurred in Quebec (53%, p = 0.1). Physical inactivity has decreased in all provinces and territories from 2001 to 2018. Current smoker is the most prevalent in Yukon/NWT/Nunavut in 2000 with the greatest difference of -59%. From 2000 to 2015, heavy drinking is least prevalent in Prince Edward Island but has the greatest difference of 59% (p =0.03).  High blood cholesterol is prevalent in Newfoundland and Labrador, New Brunswick, Nova Scotia, and Ontario. The greatest difference from 2015-2017 is Prince Edward Island with -18.53% (p = 0.02).
+
+**Table 5**: Prevalence of risk factors, by provinces and territories in Canada, from 2000 to 2018.
+
+## Interpretations
+
+
+
+### Limitations
+
+Despite the representative sample, the study poses some limitations. CCHS relies heavily on self-report data, resulting in the underestimation of risk factors and recall bias. Physical activity only measures leisure physical activity and does not account for active transportation (such as walking and biking to work), work activity, or sedentary time. The physical activity at hand may not be sufficient in accurately portraying the complete effect of physical activity on each subgroup. In surveys, respondents tend to over-report their health behaviours and underreport their unhealthy behaviours. This is referred to as “social desirability bias”. For example, self-reported alcohol consumption in surveys accounts for half the volume of alcohol sold (34).
+
+In terms of the information related to immigrants, the information related to country of origin is limited with only one survey question asking if their country of origin is Canada or outside of Canada. Ethnicity is dichotomously categorized into ‘white’ and ‘non-white’. Health behaviours can vary by country of origin and ethnicity because of cultural norms and customs. Because of the differences in place of origin and ethnicity, health differences observed among immigrant groups may be because of a cohort effect, where long-term immigrants may have had worse cardiovascular risk profiles before immigrating to Canada (29). Previous studies using longitudinal data provide evidence to validate our findings (35). As a next step, it is feasible to link immigration data related to country of origin, settlement time, and ethnicity for a more detailed assessment of risk CVD factors in immigrants. Further investigations into the immigrant subgroups such as protected persons, economic immigrants, and humanitarian immigrants will detail further context into the health behaviours from different circumstances. Cohort analysis by place of origin and more detailed ethnic groups can be used to identify at-risk immigrant cohorts for public health surveillance.
+
+### Conclusion
+
+The current study draws attention to the distributions and trends of CVD risk factors among Canada’s migrant population from 2000 to 2018. With promising trends such as decreased smoking and physical inactivity, the increasing prevalence of obesity, diabetes, and hypertension is still of concern. The varying trends are further divided by provincial and territorial differences. The substantial variations in CVD risk factors among immigrant groups may have serious implications for long-term cardiovascular health. This is especially evident in long-term immigrants in Canada. A focus on CVD risk factor management along with equitable access to health care services could prevent many cardiovascular events. The shift in migration pattern necessitates the need to consider migration and geographical factors in the design of targeted interventions and health promotion strategies. Such approaches can reduce the burden of CVD and their inequalities among migrant groups.
 
 \pagebreak
 
