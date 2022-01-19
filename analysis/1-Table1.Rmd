@@ -115,7 +115,7 @@ t1_sex<-gtsummary::tbl_merge(tbls = list(t1_unweighted, t1_weighted),
           tab_spanner=c("**Unweighted**","**Weighted**"))
 t1_sex_final<-print(t1_sex)
 
-# print out final table 
+# Print out final table 
 t1_sex %>%
   gtsummary::as_hux_table()%>%
   quick_xlsx(file = "Table2-Descriptive.xlsx")
