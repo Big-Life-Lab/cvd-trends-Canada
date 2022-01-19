@@ -229,7 +229,7 @@ hux<- function(risk, riskm, riskf, title){
   
   all_hux <- as_hux(all) %>%
     theme_article()%>%
-    insert_row(c("Both", "","","","","","","","","","",""),after = 1) %>%
+    insert_row(c("Both sexes", "","","","","","","","","","",""),after = 1) %>%
     insert_row(c("Male", "","","","","","","","","","",""),after = 7) %>%
     insert_row(c("Female", "","","","","","","","","","",""),after = 13) %>%
     set_italic(2,1)%>%
@@ -249,51 +249,8 @@ all_smoke_hux <- hux(smoke_t1, smoke_t1_m, smoke_t1_f,"Current smoker")
 all_alc_hux <- hux(alc_t1, alc_t1_m, alc_t1_f,"Heavy drinker")
 
 all_age_final<- rbind(all_ht_hux, all_db_hux[-1,], all_bmi_hux[-1,], all_mets_hux[-1,], all_smoke_hux[-1,], all_alc_hux[-1,], all_bc_hux[-1,])
+
+# print final table
+quick_xlsx(all_age_final,
+           file = "Table4-Age-Prevalence.xlsx")
 ```
-
-```{r Full table}
-library(gt)
-years <- c("2001", "2003", "2005", "2007", "2009", "2011", "2013", "2015", "2017")
-
-all_t1 <- rbind(ht_t1, db_t1, bmi_t1, mets_t1, smoke_t1, alc_t1,
-                ht_t1_m, db_t1_m, bmi_t1_m, mets_t1_m, smoke_t1_m, alc_t1_m,
-                ht_t1_f, db_t1_f, bmi_t1_f, mets_t1_f, smoke_t1_f, alc_t1_f)
-all_t1_gt <- gt(tibble(all_t1)) %>%
-  tab_spanner(label ="Year; prevalence, %",
-              columns = years) %>%
-  # Sex
-  tab_row_group(label = "Female", rows =61:90) %>%
-  tab_row_group(label = "Male", rows = 31:60) %>%
-  tab_row_group(label = "Both", rows = 1:30)%>%
-  tab_style(style = cell_text(weight = "bold"), locations = list(cells_row_groups())) %>%
-  
-  # Characteristics
-  tab_row_group(label = "Heavy drinker (F)", rows = 86:90)%>%
-  tab_row_group(label = "Current smoker (F)", rows = 81:85)%>%
-  tab_row_group(label = "Physical inactivity (F)", rows = 76:80)%>%
-  tab_row_group(label = "Obesity (F)", rows = 71:75)%>%
-  tab_row_group(label = "Diabetes (F)", rows = 66:70)%>%
-  tab_row_group(label = "Hypertension (F)", rows = 61:65)%>%
-  
-  tab_row_group(label = "Heavy drinker (M)", rows = 56:60)%>%
-  tab_row_group(label = "Current smoker (M)", rows = 51:55)%>%
-  tab_row_group(label = "Physical inactivity (M)", rows = 46:50)%>%
-  tab_row_group(label = "Obesity (M)", rows = 41:45)%>%
-  tab_row_group(label = "Diabetes (M)", rows = 36:40)%>%
-  tab_row_group(label = "Hypertension (M)", rows = 31:35)%>%
-  
-  tab_row_group(label = "Heavy drinker", rows = 26:30)%>%
-  tab_row_group(label = "Current smoker", rows = 21:22)%>%
-  tab_row_group(label = "Physical inactivity", rows = 16:20)%>%
-  tab_row_group(label = "Obesity", rows = 11:15)%>%
-  tab_row_group(label = "Diabetes", rows = 6:10)%>%
-  tab_row_group(label = "Hypertension", rows = 1:5)%>%
-  
-  tab_style(style = cell_text(weight = "bold"), locations = list(cells_row_groups())) %>%
-  cols_label(p_value = "p-value",
-             Difference = "Relative change, %")
-
-as_raw_html(all_t1_gt)
-```
-
-

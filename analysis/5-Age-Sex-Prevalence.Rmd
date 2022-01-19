@@ -153,12 +153,16 @@ library(huxtable)
 all_as_hx<-as_hux(all_as)
 all_as_final<-all_as_hx %>%
   theme_article()%>%
-  insert_row(c("Both", "","","","","","","","","","",""),after = 1) %>%
+  insert_row(c("Both sexes", "","","","","","","","","","",""),after = 1) %>%
   insert_row(c("Male", "","","","","","","","","","",""),after = 9) %>%
   insert_row(c("Female", "","","","","","","","","","",""),after = 17) %>%
   set_bold(10,1)%>%
   set_bold(18,1)%>%
   set_top_border(row =10) 
 print(all_as_final)
+
+# print final table
+quick_xlsx(all_as_final,
+           file = "Table3-Age-Sex-Prevalence.xlsx")
 ```
 

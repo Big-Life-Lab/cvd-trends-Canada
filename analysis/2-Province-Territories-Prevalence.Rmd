@@ -2,7 +2,9 @@
 title: "Prevalence by province"
 author: "Kitty Chen"
 date: "26/10/2021"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -128,6 +130,7 @@ alc_pt
 all_pt <- as.data.frame(rbind(ht_pt, db_pt, bmi_pt, mets_pt, smoke_pt, alc_pt))
 all_pt <- as.data.frame(rbind(all_pt, bc_pt))
 library(huxtable)
+library(Rcpp)
 
 all_pt_final<-as_hux(all_pt) %>%
   theme_article()%>%
@@ -146,6 +149,9 @@ all_pt_final<-as_hux(all_pt) %>%
   set_bold(74,1)%>%
   set_top_border(row =10) 
 print(all_pt_final)
+
+# print final table
+quick_xlsx(all_pt_final, file = "Table5-Regional-Prevalence.xlsx")
 ```
 
 ```{r Full table - gt}
@@ -165,4 +171,11 @@ all_pt_gt <- gt(tibble(all_pt)) %>%
   tab_style(style = cell_text(weight = "bold"), locations = list(cells_row_groups())) %>%
   cols_label(p_value = "p-value",
              Difference = "Relative change, %")
+
+# print out final table 
+all_pt_gt %>%
+  gt::gtsave(
+    filename = "Table5-Regional-Prevalence.png"
+  )
+
 ```

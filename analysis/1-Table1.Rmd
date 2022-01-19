@@ -94,8 +94,8 @@ levels(T1$CCC_121)
 
 ```{r Rename titles, message=FALSE, warning=FALSE}
 T1 <- T1 %>%
-  select(Age_Group, DHH_SEX,Province,Immigration,HWTGBMI_der_cat4,CCC_071,CCC_075,
-         CCC_101,Alcohol,SMKDSTY_cat3,activity, year, Risk_factor, CCC_121, WTS_M) %>%
+  select(Age_Group, DHH_SEX,Province, year,Immigration,CCC_121, HWTGBMI_der_cat4,CCC_071,CCC_075,
+         CCC_101,Alcohol,SMKDSTY_cat3,activity, Risk_factor, WTS_M) %>%
   rename('Age'=Age_Group,'Sex'=DHH_SEX, 'Body Mass Index (BMI)'=HWTGBMI_der_cat4,
          'Leisure activity'=activity,'Hypertension'=CCC_071,'Blood cholesterol'=CCC_075,
          'Diabetes'=CCC_101,'Smoking status'=SMKDSTY_cat3, "Year"=year, 'Number of risk factors'= Risk_factor, 
@@ -114,24 +114,9 @@ t1_weighted <-gtsummary::tbl_svysummary(data =t1_design, by = 'Sex',
 t1_sex<-gtsummary::tbl_merge(tbls = list(t1_unweighted, t1_weighted),
           tab_spanner=c("**Unweighted**","**Weighted**"))
 t1_sex_final<-print(t1_sex)
+
+# print out final table 
+t1_sex %>%
+  gtsummary::as_hux_table()%>%
+  quick_xlsx(file = "Table2-Descriptive.xlsx")
 ```
-
-
-```{r Table 1 (weight and unweighted)}
-library(flextable)
-
-T1_unweighted <- T1%>%
-  select(-WTS_M)
-t1_unweighted <- gtsummary::tbl_summary(data=T1_unweighted,
-                                         missing = "no")
-t1_design <- survey::svydesign(id=~0, weights=~WTS_M, data=T1)
-t1_weighted <-gtsummary::tbl_svysummary(data =t1_design,
-                                        missing = "no")
-t1<-gtsummary::tbl_merge(tbls = list(t1_unweighted, t1_weighted),
-          tab_spanner=c("**Unweighted**","**Weighted**")) %>%
-t1 %>%as_flex_table()
-t1_final<-print(t1)
-gtsummary::tbl_svysummary(data =t1_design, by=Year,
-                                        missing = "no")
-```
-
