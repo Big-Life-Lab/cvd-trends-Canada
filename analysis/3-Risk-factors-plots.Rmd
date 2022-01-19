@@ -26,12 +26,6 @@ svy_plot <- as_survey_design(.data=plot_data, weights="WTS_M")
 #2011 census population standardization (age and sex)
 pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
 
-## Weighted population by year and immigration
-pop_weight <- plot_data %>%
-  select(year, Immigration, WTS_M)%>%
-  group_by(year, Immigration)%>%
-  summarise(Weighted_pop=sum(WTS_M))
-
 ```
 
 ```{r}
@@ -99,7 +93,7 @@ ggplotly(smoke_plot)
 ```
 
 ```{r Drinking}
-alc_plot <-prev_plot(svy_design, Alcohol, 4, pop2011, 2001, "Alcohol")
+alc_plot <-prev_plot(svy_design, Alcohol, 4, pop2011, 2001, "Heavy drinker")
 ggplotly(alc_plot)
 ```
 
