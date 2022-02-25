@@ -21,11 +21,11 @@ library(kableExtra)
 
 **Abstract:**
 
-**Background:** In this study, cardiovascular risk factor trends in Canada were updated and compared between immigrant to Canada and people born in Canada.
+**Background:** In this study, cardiovascular disease (CVD) risk factor trends in Canada were updated and compared between immigrants to Canada and people born in Canada.
 
-**Methods:** Tthe Canadian Community Health Surveys (CCHS) from 2001 to 2018 (XX respondents) was used to estimate the national trends in hypertension, diabetes, smoking, activity levels, alcohol consumption, high blood cholesterol, and obesity.
+**Methods:** The Canadian Community Health Surveys (CCHS) from 2001 to 2018 (1,065,391 respondents) were used to estimate the national trends in hypertension, diabetes, smoking, activity levels, alcohol consumption, high blood cholesterol, and obesity.
 
-**Results:** During the study period, heart disease decreased significantly across migrant groups except for non-white long-term immigrants (from x to y, 20%). Current smokers also decreased across all groups, especially in non-white populations. Heavy drinking was most prevalent in white Canada-born populations and the lowest being non-white immigrants. Physical inactivity was most prevalent in immigrant populations, especially with long-term non-white immigrants (by 50%). The prevalence of diabetes, hypertension, and obesity increased for all population groups and provinces in Canada. Having two or more risk factors continued to increase across all population groups.
+**Results:** During the study period, heart disease decreased significantly across migrant groups except for non-white long-term immigrants (by 20%). Current smokers also decreased across all groups, especially in non-white populations. Heavy drinking was most prevalent in white Canada-born populations and the lowest being non-white immigrants. Physical inactivity was most prevalent in immigrant populations, especially with long-term non-white immigrants (by 50%). The prevalence of diabetes, hypertension, and obesity increased for all population groups in Canada. Having two or more risk factors continued to increase across all population groups.
 
 **Conclusions:** Long-term immigrants in Canada had a higher prevalence of CVD risk factors compared to their native-born counterparts.
 
@@ -33,7 +33,7 @@ library(kableExtra)
 
 **Acknowledgments:** This project is supported by a CANHEART SPOR (www.canheart.ca) summer studentship funded through a Canadian Institutes of Health Research (CIHR) Strategy for Patient Oriented Research (SPOR) Innovative Clinical Trial Multi Year Grant (MYG 151211).
 
-**Word count:** Abstract: 204 ; Text body: 3380
+**Word count:** Abstract: 165 ; Text body: 3380
 
 **Table and figures:** 7
 
@@ -55,7 +55,7 @@ In this study, national trends in heart disease and a wider range of risk factor
 
 Canadian Community Health Survey (CCHS) is a cross-sectional survey that collects information related to health status, health determinants, and socio-demographic characteristics for non-institutionalized Canadian household population aged 12 and up. The survey covers the ten provinces and the three territories, excluding persons living on First Nations reserves and settlements, full-time members of the Canadian Forces, and institutionalized persons. Data collection was conducted over the phone or in-person, and the data was collected directly from the respondents using computer-assisted personal and telephone interview software. The interview can be conducted in English or French. Each Statistics Canada Regional Office recruited interviewers with a variety of language competencies to remove language barriers. Detailed information about the CCHS is available online [@statisticscanadaCanadianCommunityHealth2021].
 
-In this study, data from the Public Use Microdata Files (PUMF) from Statistics Canada's 2000-2018 CCHS were used to analyze the risk factors of interest. The year for the earliest PUMF was defined as 2001, and subsequent PUMFs were defined for every two-year interval. For example, the 2017/2018 cycle has the cycle year of 2017. The population age was from 12 years and older. Respondents that did not indicate Canadian or immigrant status in the survey were excluded from the analysis. The sample consisted of 1,065,391 respondents across all cycles and was weighted to represent 241 million Canadians (Table 2). The overall response rate across all cycles is greater than 75%. The respondents were stratified by sex and age groups (12--34, 35--49, 50--64, 65--74, and ≥ 75 years), following the age groups of the previous analyses. The participants were based on time spent in Canada, country of birth, immigrant status, and ethnicity. Six immigration groups were generated: white Canada-born, white immigrant (0-9 years since immigration), white immigrant (10+ years since immigration), non-white Canada-born, non-white immigrant (0-9 years since immigration), and non-white immigrant (10+ years since immigration).
+In this study, data from the Public Use Microdata Files (PUMF) from Statistics Canada's 2000-2018 CCHS were used to analyze the risk factors of interest. The year for the earliest PUMF was defined as 2001, and subsequent PUMFs were defined for every two-year interval. For example, the 2017/2018 cycle has the cycle year of 2017. The population age was from 12 years and older. Respondents that did not indicate Canadian or immigrant status in the survey were excluded from the analysis. The sample consisted of 1,065,391 respondents across all cycles and was weighted to represent 241 million Canadians (Table 2). The overall response rate across all cycles is greater than 75%. The respondents were stratified by sex and age groups (12-34, 35-49, 50-64, 65-74, and ≥ 75 years), following the age groups of the previous analyses. The participants were based on time spent in Canada, country of birth, immigrant status, and ethnicity. Six immigration groups were generated: white Canada-born, white immigrant (0-9 years since immigration), white immigrant (10+ years since immigration), non-white Canada-born, non-white immigrant (0-9 years since immigration), and non-white immigrant (10+ years since immigration).
 
 ### Data cleaning and preparation
 
