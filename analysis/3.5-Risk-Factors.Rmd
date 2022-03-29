@@ -1,0 +1,135 @@
+---
+title: "3.5-Risk-Factors"
+author: "Kitty Chen"
+date: "27/03/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Survey design and function
+```{r}
+library(ggplot2)
+library(dplyr)
+library(cchsflow)
+library(plotly)
+library(srvyr)
+library(survey)
+library(tidyr)
+
+plot_data <- harmonized_combined %>%
+  select(year,Province, DHH_SEX, Age_Group, CCC_071,CCC_101,CCC_075,activity,HWTGBMI_der_cat4,
+         Immigration,Alcohol,SMKDSTY_cat3,Risk_factor,WTS_M)
+
+svy_imm <- as_survey_design(.data=plot_data, weights="WTS_M")
+
+#2011 census population standardization (age and sex)
+pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
+
+```
+
+```{r Prevalence by immigration}
+prev_imm <- function(design, sum_var, filter_value, stdpop){
+  
+  # Prevalence 
+  table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = survey_mean()*100) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-Prevalence_se, -{{sum_var}})
+  
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ Immigration, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with p-value
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  return(table1)
+}
+
+## Blood cholesterol
+
+prev_imm_bc <- function(design, sum_var, filter_value, stdpop){
+  
+  # Prevalence 
+  table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = survey_mean()*100) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-Prevalence_se, -{{sum_var}})
+  
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ Immigration, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with p-value
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2015`) / `2015`*100))
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  return(table1)
+}
+```
+
+## Tables 
+```{r Hypertension}
+ht_imm <-prev_imm(svy_imm, CCC_071, 1, pop2011)
+
+```
+
+```{r Diabetes}
+db_imm <-prev_imm(svy_imm, CCC_101, 1, pop2011)
+
+```
+
+```{r Blood cholesterol}
+bc_imm <-prev_imm_bc(svy_imm, CCC_075, 1, pop2011)
+
+```
+
+```{r Obesity}
+bmi_imm <-prev_imm(svy_imm, HWTGBMI_der_cat4, 4, pop2011)
+
+```
+
+```{r Physical inactivity}
+mets_imm <- prev_imm(svy_imm, activity, "Inactive", pop2011)
+
+```
+
+```{r Smoking}
+smoke_imm <- prev_imm(svy_imm, SMKDSTY_cat3, 1, pop2011)
+
+```
+
+```{r Drinking}
+alc_imm <-prev_imm(svy_imm, Alcohol, 4, pop2011)
+
+```
+
+```{r Heart disease}
+hd_imm <-prev_imm(svy_imm, CCC_121, 1, pop2011)
+
+```
+
+```{r 2+ risk factors}
+rf_imm <-prev_imm(svy_imm, Risk_factor, "2+", pop2011)
+
+```

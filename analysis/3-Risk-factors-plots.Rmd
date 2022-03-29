@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Survey design and function
 ```{r}
 library(ggplot2)
 library(dplyr)
@@ -16,6 +17,7 @@ library(cchsflow)
 library(plotly)
 library(srvyr)
 library(survey)
+library(tidyr)
 
 plot_data <- harmonized_combined %>%
   select(year,Province, DHH_SEX, Age_Group, CCC_071,CCC_101,CCC_075,activity,HWTGBMI_der_cat4,
@@ -47,23 +49,23 @@ prev_plot <- function(design, sum_var, filter_value, stdpop, startyear, title){
   ggtitle(title)+
   labs(colours="Migration Groups")+
   theme(plot.title = element_text(hjust = 0.5),
-        # legend.position = "none", 
+        # legend.position = "none",
         # panel.grid.major = element_blank(),
         # panel.grid.minor = element_blank(),
         # panel.background = element_blank(),
         axis.line = element_line(colour = "black"),
         panel.border = element_rect(colour = "black", fill=NA))+
   scale_y_continuous(limit=c(0,62))+
-  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+ 
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+
   scale_color_brewer(palette = "Paired")
   
   return(plot)
 }
 ```
 
-
+## Plots 
 ```{r Hypertension}
-ht_plot <-prev_plot(svy_plot, CCC_071, 1, pop2011, 2001, "Hypertension")
+ht_plot <-prev_plot(svy_design, CCC_071, 1, pop2011, 2001, "Hypertension")
 ggplotly(ht_plot)
 ```
 

@@ -101,7 +101,7 @@ prev_bc <- function(design, sum_var, filter_value, stdpop){
 
 ```
 
-## Both sex
+## Both sex - sub-tables
 
 ```{r Hypertension}
 ht_t1 <-prev(svy_design, CCC_071, 1, pop2011)
@@ -143,7 +143,7 @@ alc_t1
 
 ```
 
-## Male
+## Male - sub-tables
 
 ```{r Hypertension}
 ht_t1_m <-prev(svy_design_male, CCC_071, 1, pop2011_male)
@@ -185,7 +185,7 @@ alc_t1_m
 
 ```
 
-## Female
+## Female - sub-tables
 
 ```{r Hypertension}
 ht_t1_f <-prev(svy_design_female, CCC_071, 1, pop2011_female)
@@ -222,6 +222,8 @@ alc_t1_f <-prev(svy_design_female, Alcohol, 4, pop2011_female)
 alc_t1_f
 ```
 
+
+## Final table
 ```{r}
 library(huxtable)
 hux<- function(risk, riskm, riskf, title){

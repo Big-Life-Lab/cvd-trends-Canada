@@ -9,8 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
+## Survey design and function
 ```{r Design and functions}
 library(srvyr)
 library(dplyr)
@@ -107,6 +106,7 @@ prev_as_bc <- function(design, sum_var, filter_value, stdpop, title){
 }
 ```
 
+## Both sex - sub-tables
 ```{r All}
 ht_as <- prev_as(svy_design, CCC_071, 1, pop2011, "Hypertension")
 db_as <-prev_as(svy_design, CCC_101, 1, pop2011, "Diabetes")
@@ -117,6 +117,7 @@ smoke_as <- prev_as(svy_design, SMKDSTY_cat3, 1, pop2011, "Current smoker")
 alc_as <-prev_as(svy_design, Alcohol, 4, pop2011, "Heavy drinker")
 ```
 
+## Male - sub-tables
 ```{r Male, warning=FALSE}
 ht_a_male <- prev_as(svy_design_male, CCC_071, 1, pop2011_male, "Hypertension")
 db_a_male <-prev_as(svy_design_male, CCC_101, 1, pop2011_male, "Diabetes")
@@ -127,6 +128,7 @@ smoke_a_male <- prev_as(svy_design_male, SMKDSTY_cat3, 1, pop2011_male, "Current
 alc_a_male <-prev_as(svy_design_male, Alcohol, 4, pop2011_male, "Heavy drinker")
 ```
 
+## Female - sub-tables
 ```{r Female, warning=FALSE}
 ht_a_female <- prev_as(svy_design_female, CCC_071, 1, pop2011_female, "Hypertension")
 db_a_female <-prev_as(svy_design_female, CCC_101, 1, pop2011_female, "Diabetes")
@@ -137,7 +139,7 @@ smoke_a_female <- prev_as(svy_design_female, SMKDSTY_cat3, 1, pop2011_female, "C
 alc_a_female <-prev_as(svy_design_female, Alcohol, 4, pop2011_female, "Heavy drinker")
 ```
 
-
+## Final table
 ```{r Combined - huxtable}
 as <- rbind(ht_as, db_as, bmi_as, mets_as, smoke_as, alc_as, bc_as)
 a_male <- rbind(ht_a_male, db_a_male, bmi_a_male, mets_a_male, smoke_a_male, alc_a_male, bc_a_male)

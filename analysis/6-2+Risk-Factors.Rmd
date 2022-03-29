@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Survey design and function
 ```{r}
 library(srvyr)
 library(dplyr)
@@ -53,6 +53,7 @@ prev_2 <- function(design, sum_var, filter_value, stdpop){
 
 ```
 
+## Final table
 ```{r 2+ risk factors}
 rf2<-prev_2(svy_design, Risk_factor, "2+", pop2011)
 

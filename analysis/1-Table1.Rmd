@@ -9,8 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Table 1a analysis
-
+## Labels
 ```{r Factoring each variable, message=FALSE, warning=FALSE, include=FALSE}
 library(dplyr)
 
@@ -103,6 +102,7 @@ T1 <- T1 %>%
 colnames(T1)
 ```
 
+## Final table
 ```{r Table 1 stratified by sex (weight and unweighted)}
 T1_unweighted <- T1%>%
   select(-WTS_M)

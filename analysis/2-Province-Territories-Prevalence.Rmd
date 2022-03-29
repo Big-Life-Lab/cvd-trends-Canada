@@ -90,7 +90,7 @@ prev_pt_bc <- function(design, sum_var, filter_value, stdpop){
 }
 ```
 
-
+## Sub-tables
 ```{r Hypertension}
 ht_pt <-prev_pt(svy_design, CCC_071, 1, pop2011)
 ht_pt
@@ -126,6 +126,7 @@ alc_pt <-prev_pt(svy_design, Alcohol, 4, pop2011)
 alc_pt
 ```
 
+## Final table
 ```{r Full table - huxtable}
 all_pt <- as.data.frame(rbind(ht_pt, db_pt, bmi_pt, mets_pt, smoke_pt, alc_pt))
 all_pt <- as.data.frame(rbind(all_pt, bc_pt))
