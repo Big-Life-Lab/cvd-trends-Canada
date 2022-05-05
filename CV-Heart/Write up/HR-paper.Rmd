@@ -17,7 +17,7 @@ library(kableExtra)
 
 **Authors:**
 
-Kitty, Anan Bader Eddeen, [**Rachel C. Colley**](https://www150.statcan.gc.ca/en/type/analysis?author=colley_rachel), [**Michael Tjepkema**](https://www150.statcan.gc.ca/en/type/analysis?author=tjepkema_micheal), [**Rochelle Garner**](https://www150.statcan.gc.ca/en/type/analysis?author=garner_rochelle), **Carol Bennett** [**Julie Bernier**](https://www150.statcan.gc.ca/en/type/analysis?author=bernier_julie) **and [Douglas G. Manuel](https://www150.statcan.gc.ca/en/type/analysis?author=manuel_douglas)**,
+Kitty, Anan Bader Eddeen, [**Rachel C. Colley**](https://www150.statcan.gc.ca/en/type/analysis?author=colley_rachel), [**Michael Tjepkema**](https://www150.statcan.gc.ca/en/type/analysis?author=tjepkema_micheal), [**Rochelle Garner**](https://www150.statcan.gc.ca/en/type/analysis?author=garner_rochelle), **Carol Bennett** Warsame Yusuf [**Julie Bernier**](https://www150.statcan.gc.ca/en/type/analysis?author=bernier_julie) **and [Douglas G. Manuel](https://www150.statcan.gc.ca/en/type/analysis?author=manuel_douglas)**,
 
 **Corresponding author information:**
 
