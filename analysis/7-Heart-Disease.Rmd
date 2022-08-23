@@ -17,6 +17,7 @@ hd_pt<-prev_pt(svy_design, CCC_121, 1, pop2011)
 hd_imm <- prev_imm(svy_design, CCC_121, 1, pop2011)
 hd_male<-prev_as(svy_design_male, CCC_121, 1, pop2011_male, "Male")
 hd_female <-prev_as(svy_design_female, CCC_121, 1, pop2011_female, "Female")
+hd_as <-prev_as(svy_design, CCC_121, 1, pop2011, "Heart disease")
 
 ```
 

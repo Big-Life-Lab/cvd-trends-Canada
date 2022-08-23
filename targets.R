@@ -28,7 +28,7 @@ read_worksheets <- list(
   # Create the variables sheet for the project
   targets::tar_target(
     cchs_variables_sheet,
-    read.csv(huiport_variables_sheet_file)
+    read.csv(cchsflow_variables_sheet_file)
   ),
   # Keep track of changes to the cchsflow variable details file
   targets::tar_target(

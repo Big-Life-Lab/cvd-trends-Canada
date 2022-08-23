@@ -115,6 +115,7 @@ bmi_as <-prev_as(svy_design, HWTGBMI_der_cat4, 4, pop2011, "Obesity")
 mets_as <- prev_as(svy_design, activity, "Inactive", pop2011, "Physical inactivity")
 smoke_as <- prev_as(svy_design, SMKDSTY_cat3, 1, pop2011, "Current smoker")
 alc_as <-prev_as(svy_design, Alcohol, 4, pop2011, "Heavy drinker")
+hd_as <-prev_as(svy_design, CCC_121, 1, pop2011, "Heart disease")
 ```
 
 ## Male - sub-tables
@@ -126,6 +127,7 @@ bmi_a_male <-prev_as(svy_design_male, HWTGBMI_der_cat4, 4, pop2011_male, "Obesit
 mets_a_male <- prev_as(svy_design_male, activity, "Inactive", pop2011_male, "Physical inactivity")
 smoke_a_male <- prev_as(svy_design_male, SMKDSTY_cat3, 1, pop2011_male, "Current smoker")
 alc_a_male <-prev_as(svy_design_male, Alcohol, 4, pop2011_male, "Heavy drinker")
+hd_a_male<-prev_as(svy_design_male, CCC_121, 1, pop2011_male, "Male")
 ```
 
 ## Female - sub-tables
@@ -137,13 +139,15 @@ bmi_a_female <-prev_as(svy_design_female, HWTGBMI_der_cat4, 4, pop2011_female, "
 mets_a_female <- prev_as(svy_design_female, activity, "Inactive", pop2011_female, "Physical inactivity")
 smoke_a_female <- prev_as(svy_design_female, SMKDSTY_cat3, 1, pop2011_female, "Current smoker")
 alc_a_female <-prev_as(svy_design_female, Alcohol, 4, pop2011_female, "Heavy drinker")
+hd_a_female <-prev_as(svy_design_female, CCC_121, 1, pop2011_female, "Female")
 ```
 
 ## Final table
 ```{r Combined - huxtable}
-as <- rbind(ht_as, db_as, bmi_as, mets_as, smoke_as, alc_as, bc_as)
-a_male <- rbind(ht_a_male, db_a_male, bmi_a_male, mets_a_male, smoke_a_male, alc_a_male, bc_a_male)
-a_female <- rbind(ht_a_female, db_a_female, bmi_a_female, mets_a_female, smoke_a_female, alc_a_female, bc_a_female)
+as <- rbind(ht_as, db_as, bmi_as, mets_as, smoke_as, alc_as, bc_as, hd_as)
+a_male <- rbind(ht_a_male, db_a_male, bmi_a_male, mets_a_male, smoke_a_male, alc_a_male, bc_a_male,
+                hd_a_male )
+a_female <- rbind(ht_a_female, db_a_female, bmi_a_female, mets_a_female, smoke_a_female, alc_a_female, bc_a_female, hd_a_female)
 
 all_as <- rbind(as, a_male, a_female) %>%
   rename("Relative change, %" = Difference,
