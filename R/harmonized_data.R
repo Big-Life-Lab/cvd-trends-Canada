@@ -41,12 +41,14 @@ harmonized_2015_2016 <- cchsflow::rec_with_table(cchs2015_2016, variables = vari
                                                  notes = FALSE
 )
 harmonized_2015_2016$year <- 2015
+harmonized_2015_2016 <- cbind(harmonized_2015_2016, bsw1516[,-(1:2)])
 
 harmonized_2017_2018 <- cchsflow::rec_with_table(cchs2017_2018, variables = variables, variable_details = variable_details, 
                                                  custom_function_path = "R/custom-functions.R",
                                                  notes = FALSE
 )
 harmonized_2017_2018$year <- 2017
+harmonized_2017_2018 <- cbind(harmonized_2017_2018, bsw1718[,-(1:2)])
 
 # Combined
 harmonized_combined <- merge_rec_data(harmonized_2001, harmonized_2003, harmonized_2005, harmonized_2007_2008, harmonized_2009_2010,harmonized_2011_2012, harmonized_2013_2014, harmonized_2015_2016, harmonized_2017_2018)
@@ -79,12 +81,12 @@ harmonized_combined <- harmonized_combined %>%
 # Remove NA immigration population
 harmonized_combined <-harmonized_combined %>%
   filter(immigration_der %in% c(1:6)) %>%
-  mutate(Immigration = case_when(immigration_der ==1 ~ "White Canada-born",
-                          immigration_der ==2 ~ "Non-white Canada-born",
-                          immigration_der ==3 ~'White recent immigrant',
-                          immigration_der ==4 ~'Non-white established immigrant',
-                          immigration_der ==5 ~'White recent immigrant',
-                          immigration_der ==6 ~'Non-white established immigrant'
+  mutate(Immigration = case_when(immigration_der ==1 ~ "Non-racialized and non-Indigenous Canada-born",
+                          immigration_der ==2 ~ "Racialized Canada-born",
+                          immigration_der ==3 ~'Non-racialized and non-Indigenous recent immigrant',
+                          immigration_der ==4 ~'Racialized recent immigrant',
+                          immigration_der ==5 ~'Non-racialized and non-Indigenous established immigrant',
+                          immigration_der ==6 ~'Racialized established immigrant'
   ))
 
 # Add # of risk factors

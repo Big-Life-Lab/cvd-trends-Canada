@@ -18,30 +18,45 @@ library(dplyr)
 library(tidyr)
 library(survey)
 
-# Design
-svy_design <- as_survey_design(.data=harmonized_combined, weights="WTS_M")
+# Design for 2001-2014
+harmonized_2001_2014 <- harmonized_combined[!(harmonized_combined$year==2015|harmonized_combined$year==2017),]
+svy_design <- srvyr::as_survey_design(.data=harmonized_2001_2014, weights="WTS_M")
 
 #2011 census population standardization (age and sex)
 pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
 
 # Prevalence for provinces and territories
-prev_pt <- function(design, sum_var, filter_value, stdpop){
+prev_pt <- function(design, design_bsw, sum_var, filter_value, stdpop){
   
-  # Prevalence 
-  table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
-    group_by(year,Province, {{sum_var}}) %>%
-    summarise(Prevalence = survey_mean()*100) %>%
+  # Prevalence for 2000-2014
+  table_non_bsw <- svystandardize(design, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year, Province, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
     filter({{sum_var}} == filter_value) %>%
-    select(-Prevalence_se, -{{sum_var}})
+    select(-{{sum_var}})
+  
+  # Prevalence for bsw in 2015-2018
+  table_bsw <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year, Province, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combine table
+  table_ci <- bind_rows(table_non_bsw, table_bsw)
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(4,5)]
   
   # Generate p-value from regression
   pval <- summary(lm(Prevalence ~ Province, data = table))
   pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
   
-  # Complete table with p-value
+  # Complete table with difference
   table1 <- table %>%
     spread(year, Prevalence) %>%
     mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  
   table1$p_value <- pval_col
   
   table1 <- table1 %>% 
@@ -49,35 +64,60 @@ prev_pt <- function(design, sum_var, filter_value, stdpop){
     mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
                                TRUE ~  as.character(p_value)))
   
-  return(table1)
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(3:5)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value
+  
+  return(table_ci)
 }
 
 # Prevalence for provinces and territories (blood cholesterol)
-prev_pt_bc <- function(design, sum_var, filter_value, stdpop){
+prev_pt_bc <- function(design_bsw, sum_var, filter_value, stdpop){
   
-  # Prevalence 
-  table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+   # Prevalence for bsw in 2015-2018
+  table_ci <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
     group_by(year,Province, {{sum_var}}) %>%
-    summarise(Prevalence = survey_mean()*100) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
     filter({{sum_var}} == filter_value) %>%
-    select(-Prevalence_se, -{{sum_var}})
+    select(-{{sum_var}})
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(4,5)]
   
   # Generate p-value from regression
   pval <- summary(lm(Prevalence ~ Province, data = table))
   pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
   
-  # Complete table with p-value
+  # Complete table with difference
   table1 <- table %>%
     spread(year, Prevalence) %>%
     mutate(Difference = ((`2017` - `2015`) / `2015`*100))
+  
   table1$p_value <- pval_col
   
   table1 <- table1 %>% 
     mutate(across(everything(),round, 2)) %>%
     mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
                                TRUE ~  as.character(p_value)))
+  
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(3:5)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value 
+  
   # Add empty columns
-  table1 <- table1 %>%
+  table_ci <- table_ci %>%
     add_column("2001" = "-", .before = "2015")%>%
     add_column("2003" = "-", .before = "2015")%>%
     add_column("2005" = "-", .before = "2015")%>%
@@ -86,43 +126,43 @@ prev_pt_bc <- function(design, sum_var, filter_value, stdpop){
     add_column("2011" = "-", .before = "2015")%>%
     add_column("2013" = "-", .before = "2015") 
   
-  return(table1)
+  return(table_ci)
 }
 ```
 
 ## Sub-tables
 ```{r Hypertension}
-ht_pt <-prev_pt(svy_design, CCC_071, 1, pop2011)
+ht_pt <- prev_pt(svy_design, svy_design_2015_2018, svy_design_2015_2018, CCC_071, 1, pop2011)
 ht_pt
 ```
 
 ```{r Diabetes}
-db_pt <-prev_pt(svy_design, CCC_101, 1, pop2011)
+db_pt <-prev_pt(svy_design, svy_design_2015_2018, CCC_101, 1, pop2011)
 db_pt
 ```
 
 ```{r Blood cholesterol}
-bc_pt <-prev_pt_bc(svy_design, CCC_075, 1, pop2011)
+bc_pt <-prev_pt_bc(svy_design_2015_2018, CCC_075, 1, pop2011)
 bc_pt
 ```
 
 ```{r Obesity}
-bmi_pt <-prev_pt(svy_design, HWTGBMI_der_cat4, 4, pop2011)
+bmi_pt <-prev_pt(svy_design, svy_design_2015_2018, HWTGBMI_der_cat4, 4, pop2011)
 bmi_pt
 ```
 
 ```{r Physical inactivity}
-mets_pt <- prev_pt(svy_design, activity, "Inactive", pop2011)
+mets_pt <- prev_pt(svy_design, svy_design_2015_2018, activity, "Inactive", pop2011)
 mets_pt
 ```
 
 ```{r Smoking}
-smoke_pt <- prev_pt(svy_design, SMKDSTY_cat3, 1, pop2011)
+smoke_pt <- prev_pt(svy_design, svy_design_2015_2018, SMKDSTY_cat3, 1, pop2011)
 smoke_pt
 ```
 
 ```{r Drinking}
-alc_pt <-prev_pt(svy_design, Alcohol, 4, pop2011)
+alc_pt <-prev_pt(svy_design, svy_design_2015_2018, Alcohol, 4, pop2011)
 alc_pt
 ```
 

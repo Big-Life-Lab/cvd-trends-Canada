@@ -36,7 +36,7 @@ prev_plot <- function(design, sum_var, filter_value, stdpop, startyear, title){
   # Prevalence 
   table <- svystandardize(design,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
     group_by(year,Immigration, {{sum_var}}) %>%
-    summarise(Prevalence = survey_mean()*100) %>%
+    summarise(Prevalence = round(survey_mean()*100, 2)) %>%
     filter({{sum_var}} == filter_value) %>%
     select(-Prevalence_se, -{{sum_var}})
   
@@ -65,46 +65,46 @@ prev_plot <- function(design, sum_var, filter_value, stdpop, startyear, title){
 
 ## Plots 
 ```{r Hypertension}
-ht_plot <-prev_plot(svy_design, CCC_071, 1, pop2011, 2001, "Hypertension")
+ht_plot <-prev_plot(svy_plot, CCC_071, 1, pop2011, 2001, "Hypertension")
 ggplotly(ht_plot)
 ```
 
 ```{r Diabetes}
-db_plot <-prev_plot(svy_design, CCC_101, 1, pop2011, 2001, "Diabetes")
+db_plot <-prev_plot(svy_plot, CCC_101, 1, pop2011, 2001, "Diabetes")
 ggplotly(db_plot)
 ```
 
 ```{r Blood cholesterol}
-bc_plot <-prev_plot(svy_design, CCC_075, 1, pop2011, 2015, "High blood cholesterol")
+bc_plot <-prev_plot(svy_plot, CCC_075, 1, pop2011, 2015, "High blood cholesterol")
 ggplotly(bc_plot)
 ```
 
 ```{r Obesity}
-bmi_plot <-prev_plot(svy_design, HWTGBMI_der_cat4, 4, pop2011, 2001, "Obesity")
+bmi_plot <-prev_plot(svy_plot, HWTGBMI_der_cat4, 4, pop2011, 2001, "Obesity")
 ggplotly(bmi_plot)
 ```
 
 ```{r Physical inactivity}
-mets_plot <- prev_plot(svy_design, activity, "Inactive", pop2011, 2001, "Physical inactivity")
+mets_plot <- prev_plot(svy_plot, activity, "Inactive", pop2011, 2001, "Physical inactivity")
 ggplotly(mets_plot)
 ```
 
 ```{r Smoking}
-smoke_plot <- prev_plot(svy_design, SMKDSTY_cat3, 1, pop2011, 2001, "Current smoker")
+smoke_plot <- prev_plot(svy_plot, SMKDSTY_cat3, 1, pop2011, 2001, "Current smoker")
 ggplotly(smoke_plot)
 ```
 
 ```{r Drinking}
-alc_plot <-prev_plot(svy_design, Alcohol, 4, pop2011, 2001, "Heavy drinker")
+alc_plot <-prev_plot(svy_plot, Alcohol, 4, pop2011, 2001, "Heavy drinker")
 ggplotly(alc_plot)
 ```
 
 ```{r Heart disease}
-hd_plot <-prev_plot(svy_design, CCC_121, 1, pop2011, 2001, "Heart disease")
+hd_plot <-prev_plot(svy_plot, CCC_121, 1, pop2011, 2001, "Heart disease")
 ggplotly(hd_plot)
 ```
 
 ```{r 2+ risk factors}
-rf_plot <-prev_plot(svy_design, Risk_factor, "2+", pop2011, 2001, "2+ risk factors")
+rf_plot <-prev_plot(svy_plot, Risk_factor, "2+", pop2011, 2001, "2+ risk factors")
 ggplotly(rf_plot)
 ```

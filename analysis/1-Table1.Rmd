@@ -106,10 +106,14 @@ colnames(T1)
 ```{r Table 1 stratified by sex (weight and unweighted)}
 T1_unweighted <- T1%>%
   select(-WTS_M)
-t1_unweighted <- gtsummary::tbl_summary(data=T1_unweighted, by='Sex',
-                                         missing = "no")
+t1_unweighted <- gtsummary::tbl_summary(data=T1_unweighted, 
+                                        by='Sex',
+                                        digits = 2,
+                                        missing = "no")
 t1_design <- survey::svydesign(id=~0, weights=~WTS_M, data=T1)
-t1_weighted <-gtsummary::tbl_svysummary(data =t1_design, by = 'Sex',
+t1_weighted <-gtsummary::tbl_svysummary(data =t1_design, 
+                                        by = 'Sex',
+                                        digits = 2,
                                         missing = "no")
 t1_sex<-gtsummary::tbl_merge(tbls = list(t1_unweighted, t1_weighted),
           tab_spanner=c("**Unweighted**","**Weighted**"))
