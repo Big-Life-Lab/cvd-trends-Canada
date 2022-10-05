@@ -50,7 +50,7 @@ harmonized_2017_2018 <- cchsflow::rec_with_table(cchs2017_2018, variables = vari
 harmonized_2017_2018$year <- 2017
 harmonized_2017_2018 <- cbind(harmonized_2017_2018, bsw1718[,-(1:2)])
 
-# Combined
+# Combined dataset without bootstrap
 harmonized_combined <- merge_rec_data(harmonized_2001, harmonized_2003, harmonized_2005, harmonized_2007_2008, harmonized_2009_2010,harmonized_2011_2012, harmonized_2013_2014, harmonized_2015_2016, harmonized_2017_2018)
 harmonized <- list(harmonized_2001, harmonized_2003, harmonized_2005, harmonized_2007_2008, harmonized_2009_2010,harmonized_2011_2012, harmonized_2013_2014, harmonized_2015_2016, harmonized_2017_2018)
 harmonized_combined <- bind_rows(harmonized)
@@ -94,3 +94,50 @@ attach(harmonized_combined)
 harmonized_combined$Alcohol <-alc_cat_fun(DHH_SEX, ALC_1, ALWDWKY)
 harmonized_combined$Risk_factor<-risk_factor_fun(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3, Alcohol, CCC_075)
 
+
+#### Bootstrap for 2015-2018 ###
+# add bootstrap
+harmonized_2015_2016_bsw <- cbind(harmonized_2015_2016, bsw1516[,-(1:2)])
+harmonized_2017_2018_bsw <- cbind(harmonized_2017_2018, bsw1718[,-(1:2)])
+
+# combine data set
+harmonized_bsw <- bind_rows(harmonized_2015_2016_bsw, harmonized_2017_2018_bsw)
+
+# Add categories
+harmonized_bsw <- harmonized_bsw %>%
+  # provinces
+  mutate(Province = case_when(GEOGPRV == 10 ~ "Newfoundland and Labrador",
+                              GEOGPRV == 11 ~ "Prince Edward Island",
+                              GEOGPRV == 12 ~ "Nova Scotia",
+                              GEOGPRV == 13 ~ "New Brunswick",
+                              GEOGPRV == 24 ~ "Quebec",
+                              GEOGPRV == 35 ~ "Ontario",
+                              GEOGPRV == 46 ~ "Manitoba",
+                              GEOGPRV == 47 ~ "Saskatchewan",
+                              GEOGPRV == 48 ~ "Alberta",
+                              GEOGPRV == 59 ~ "British Columbia",
+                              GEOGPRV == 60 ~ "Yukon/NWT/Nunavut")) %>%
+  mutate(activity = case_when(energy_exp < 1.5 ~ "Inactive",
+                              energy_exp >= 1.5 & energy_exp < 3 ~ "Moderately active",
+                              energy_exp >= 3 ~ "Active")) %>%
+  mutate(Age_Group = case_when(DHHGAGE_C %in% c(1:6) ~ "12-34",
+                               DHHGAGE_C %in% c(7:9) ~ "35-49",
+                               DHHGAGE_C %in% c(10:12) ~ "50-64",
+                               DHHGAGE_C %in% c(13:14) ~ "65-74",
+                               DHHGAGE_C %in% c(15:16) ~ "75+"))
+
+# Remove NA immigration population
+harmonized_bsw <-harmonized_bsw %>%
+  filter(immigration_der %in% c(1:6)) %>%
+  mutate(Immigration = case_when(immigration_der ==1 ~ "Non-racialized and non-Indigenous Canada-born",
+                                 immigration_der ==2 ~ "Racialized Canada-born",
+                                 immigration_der ==3 ~'Non-racialized and non-Indigenous recent immigrant',
+                                 immigration_der ==4 ~'Racialized recent immigrant',
+                                 immigration_der ==5 ~'Non-racialized and non-Indigenous established immigrant',
+                                 immigration_der ==6 ~'Racialized established immigrant'
+  ))
+
+# Add # of risk factors
+attach(harmonized_bsw)
+harmonized_bsw$Alcohol <-alc_cat_fun(DHH_SEX, ALC_1, ALWDWKY)
+harmonized_bsw$Risk_factor<-risk_factor_fun(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3, Alcohol, CCC_075)

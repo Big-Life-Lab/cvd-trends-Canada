@@ -20,10 +20,20 @@ library(tidyr)
 library(survey)
 library(tibble)
 
-# Design for 2001-2014
+# Design for 2001-2014 without bootstrap
 harmonized_2001_2014 <- harmonized_combined[!(harmonized_combined$year==2015|harmonized_combined$year==2017),]
 svy_design <- srvyr::as_survey_design(.data=harmonized_2001_2014, weights="WTS_M")
+
+# Design for 2015-2018 bootstrap
+svy_design_2015_2018 <- srvyr::as_survey_rep(harmonized_bsw,
+                               repweights = starts_with("BSW"),
+                               weights = WTS_M,
+                               type = "bootstrap",
+                               bsw.weights = TRUE)
+
+# Design for 2001-2018 without bootstrap 
 svy_design1 <- srvyr::as_survey_design(.data=harmonized_combined, weights="WTS_M")
+
 #2011 census population standardization (age and sex)
 pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
 
