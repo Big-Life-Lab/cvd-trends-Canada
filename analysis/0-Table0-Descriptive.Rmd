@@ -1,0 +1,29 @@
+---
+title: "Prelim"
+output: html_document
+date: "2022-10-31"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r pressure, echo=FALSE}
+T1_imm <- T1 %>%
+  select(Age, Sex, Year, Immigration, WTS_M)
+
+t1_imm_design <- survey::svydesign(id=~0, weights=~WTS_M, data=T1_imm)
+
+t1_year <-gtsummary::tbl_svysummary(data =t1_imm_design, 
+                                        by = 'Year',
+                                        digits = everything() ~ 0,
+                                        missing = "no") %>%
+t1_year_final <- print(t1_year)
+
+gtsummary::as_hux_table(t1_year) %>%
+  huxtable::quick_xlsx(file = "Table0-Descriptive_by_Demo.xlsx")
+```
+
+

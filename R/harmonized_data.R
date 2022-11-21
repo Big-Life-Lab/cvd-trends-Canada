@@ -89,14 +89,14 @@ harmonized_combined <-harmonized_combined %>%
                           immigration_der ==6 ~'Racialized established immigrant'
   ))
 
-# Add # of risk factors
+# Add # of risk factors - go to custom-function.R to run alc_cat_fun and risk_factor_fun functions
 attach(harmonized_combined)
 harmonized_combined$Alcohol <-alc_cat_fun(DHH_SEX, ALC_1, ALWDWKY)
 harmonized_combined$Risk_factor<-risk_factor_fun(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3, Alcohol, CCC_075)
 
 
 #### Bootstrap for 2015-2018 ###
-# add bootstrap
+# add bootstrap (bsw1516 - bootstrap file for 2015/16; bsw1718 - bootstrap file for 2017/18 )
 harmonized_2015_2016_bsw <- cbind(harmonized_2015_2016, bsw1516[,-(1:2)])
 harmonized_2017_2018_bsw <- cbind(harmonized_2017_2018, bsw1718[,-(1:2)])
 
@@ -137,7 +137,7 @@ harmonized_bsw <-harmonized_bsw %>%
                                  immigration_der ==6 ~'Racialized established immigrant'
   ))
 
-# Add # of risk factors
+# Add # of risk factors  - go to custom-function.R to run alc_cat_fun and risk_factor_fun functions
 attach(harmonized_bsw)
 harmonized_bsw$Alcohol <-alc_cat_fun(DHH_SEX, ALC_1, ALWDWKY)
 harmonized_bsw$Risk_factor<-risk_factor_fun(CCC_071, CCC_101, HWTGBMI_der_cat4, activity, SMKDSTY_cat3, Alcohol, CCC_075)

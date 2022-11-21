@@ -1,0 +1,208 @@
+---
+title: "Canada Dataset for Didier"
+output: html_document
+date: "2022-11-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Bootstrap CI
+
+```{r Table with upper and lower CI}
+# Prevalence (adjusted for age and sex)
+prev_as <- function(design, design_bsw, sum_var, filter_value, stdpop, title){
+  
+  # Prevalence for 2000-2014
+  table_non_bsw <- svystandardize(design, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,{{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}}) %>%
+    filter(year <= 2013)
+
+  # Prevalence for bsw in 2015-2018
+  table_bsw <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,{{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combine table
+  table_ci <- bind_rows(table_non_bsw, table_bsw)
+  
+  # # Combined table without confidence interval
+  # table <- table_ci[,-c(4,5)]
+  
+  # # Generate p-value from regression (age and sex adjusted)
+  # pval <- summary(lm(Prevalence ~ year, data = table))
+  # pval_col <-as.numeric(pval$coefficients[2,"Pr(>|t|)"])
+
+  # # Complete table with difference
+  # table1 <- table %>%
+  #   spread(year, Prevalence) %>%
+  #   mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  # 
+  # table1$p_value <- pval_col
+  # 
+  # table1 <- table1 %>% 
+  #   mutate(across(everything(),round, 2)) %>%
+  #   mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+  #                              TRUE ~  as.character(p_value)))
+  
+  # # Add CI to final table
+  # table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+  #                                 table_ci$Prevalence_low,",", 
+  #                                 table_ci$Prevalence_upp, ")")
+  # table_ci <- table_ci[,-c(3:5)]
+  # table_ci <- table_ci %>%
+  #   spread(year, Prevalence_CI)
+  # table_ci$Difference <- table1$Difference
+  # table_ci$p_value <- table1$p_value
+  
+  return(table_ci)
+}
+```
+
+```{r All}
+ht_as <- prev_as(svy_design1, svy_design_2015_2018, CCC_071, 1, pop2011, "Hypertension")
+db_as <-prev_as(svy_design1, svy_design_2015_2018, CCC_101, 1, pop2011, "Diabetes")
+bmi_as <-prev_as(svy_design1, svy_design_2015_2018, HWTGBMI_der_cat4, 4, pop2011, "Obesity")
+mets_as <- prev_as(svy_design1, svy_design_2015_2018, activity, "Inactive", pop2011, "Physical inactivity")
+smoke_as <- prev_as(svy_design1, svy_design_2015_2018, SMKDSTY_cat3, 1, pop2011, "Current smoker")
+alc_as <-prev_as(svy_design1, svy_design_2015_2018, Alcohol, 4, pop2011, "Heavy drinker")
+
+```
+
+```{r Titles}
+ht_as <- ht_as %>%
+  rename('Lower 95% CI (BSW)' = Prevalence_low,
+         'Upper 95% CI (BSW)' = Prevalence_upp,
+         'Prevalence (BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Hypertension') %>%
+  relocate('Risk factor', .before = year)
+
+db_as <- db_as %>%
+  rename('Lower 95% CI (BSW)' = Prevalence_low,
+         'Upper 95% CI (BSW)' = Prevalence_upp,
+         'Prevalence (BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Diabetes') %>%
+  relocate('Risk factor', .before = year)
+
+bmi_as <- bmi_as %>%
+  rename('Lower 95% CI (BSW)' = Prevalence_low,
+         'Upper 95% CI (BSW)' = Prevalence_upp,
+         'Prevalence (BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Obesity') %>%
+  relocate('Risk factor', .before = year)
+
+mets_as <- mets_as %>%
+  rename('Lower 95% CI (BSW)' = Prevalence_low,
+         'Upper 95% CI (BSW)' = Prevalence_upp,
+         'Prevalence (BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Physical inactivity') %>%
+  relocate('Risk factor', .before = year)
+
+smoke_as <- smoke_as %>%
+  rename('Lower 95% CI (BSW)' = Prevalence_low,
+         'Upper 95% CI (BSW)' = Prevalence_upp,
+         'Prevalence (BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Current smoker') %>%
+  relocate('Risk factor', .before = year)
+
+alc_as <- alc_as %>%
+  rename('Lower 95% CI (BSW)' = Prevalence_low,
+         'Upper 95% CI (BSW)' = Prevalence_upp,
+         'Prevalence (BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Heavy drinker') %>%
+  relocate('Risk factor', .before = year)
+```
+
+### Non-bootstrap CI
+```{r}
+prev_nonbsw <- function(design, sum_var, filter_value, stdpop){
+  
+  # Prevalence for 2000-2018
+  table_ci <- svystandardize(design, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  return(table_ci)
+}
+
+```
+
+```{r}
+ht_as_non<- prev_nonbsw(svy_design1, CCC_071, 1, pop2011)
+db_as_non<-prev_nonbsw(svy_design1, CCC_101, 1, pop2011)
+bmi_as_non<-prev_nonbsw(svy_design1, HWTGBMI_der_cat4, 4, pop2011)
+mets_as_non<- prev_nonbsw(svy_design1, activity, "Inactive", pop2011)
+smoke_as_non<- prev_nonbsw(svy_design1, SMKDSTY_cat3, 1, pop2011)
+alc_as_non<-prev_nonbsw(svy_design1, Alcohol, 4, pop2011)
+```
+
+
+```{r Titles}
+ht_as_non <- ht_as_non %>%
+  rename('Lower 95% CI (non-BSW)' = Prevalence_low,
+         'Upper 95% CI (non-BSW)' = Prevalence_upp,
+         'Prevalence (non-BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Hypertension') %>%
+  relocate('Risk factor', .before = year)
+
+db_as_non <- db_as_non %>%
+  rename('Lower 95% CI (non-BSW)' = Prevalence_low,
+         'Upper 95% CI (non-BSW)' = Prevalence_upp,
+         'Prevalence (non-BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Diabetes') %>%
+  relocate('Risk factor', .before = year)
+
+bmi_as_non <- bmi_as_non %>%
+  rename('Lower 95% CI (non-BSW)' = Prevalence_low,
+         'Upper 95% CI (non-BSW)' = Prevalence_upp,
+         'Prevalence (non-BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Obesity') %>%
+  relocate('Risk factor', .before = year)
+
+mets_as_non <- mets_as_non %>%
+  rename('Lower 95% CI (non-BSW)' = Prevalence_low,
+         'Upper 95% CI (non-BSW)' = Prevalence_upp,
+         'Prevalence (non-BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Physical inactivity') %>%
+  relocate('Risk factor', .before = year)
+
+smoke_as_non <- smoke_as_non %>%
+  rename('Lower 95% CI (non-BSW)' = Prevalence_low,
+         'Upper 95% CI (non-BSW)' = Prevalence_upp,
+         'Prevalence (non-BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Current smoker') %>%
+  relocate('Risk factor', .before = year)
+
+alc_as_non <- alc_as_non %>%
+  rename('Lower 95% CI (non-BSW)' = Prevalence_low,
+         'Upper 95% CI (non-BSW)' = Prevalence_upp,
+         'Prevalence (non-BSW)' = Prevalence) %>%
+  mutate('Risk factor' = 'Heavy drinker') %>%
+  relocate('Risk factor', .before = year)
+```
+
+
+```{r A}
+all_as <- as.data.frame(rbind(ht_as, db_as, bmi_as, mets_as, smoke_as, alc_as))
+all_as_non <- as.data.frame(rbind(ht_as_non, db_as_non, bmi_as_non, mets_as_non, smoke_as_non, alc_as_non))
+# all_as_non <- all_as_non %>% 
+#   rename('Lower 95% CI (non-BSW)' = 'Lower 95% CI (BSW)',
+#          'Upper 95% CI (non-BSW)' = 'Upper 95% CI (BSW)',
+#          'Prevalence (non-BSW)' = 'Prevalence (BSW)')
+
+all_as_final <- merge(all_as, all_as_non)
+
+# print final table
+write.csv(all_as_final, file = "Canada-RF-BSW-nonBSW.csv")
+```
+
+
+
