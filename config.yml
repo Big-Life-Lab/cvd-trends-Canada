@@ -4,12 +4,12 @@ default:
   modules: NULL
   data_type: ".RData"
   data:
-    cchs2001: !expr file.path(getwd(), "data/cchs2001.RData")
-    cchs2003: !expr file.path(getwd(), "data/cchs2003.RData")
-    cchs2005: !expr file.path(getwd(), "data/cchs2005.RData")
-    cchs2007_2008: !expr file.path(getwd(), "data/cchs2007_2008.RData")
-    cchs2009_2010: !expr file.path(getwd(), "data/cchs2009_2010.RData")
-    cchs2011_2012: !expr file.path(getwd(), "data/cchs2011_2012.RData")
-    cchs2013_2014: !expr file.path(getwd(), "data/cchs2013_2014.RData")
-    cchs2015_2016: !expr file.path(getwd(), "data/cchs2015_2016.RData")
-    cchs2017_2018: !expr file.path(getwd(), "data/cchs2017_2018.RData")
+    cchs2001: !expr file.path(getwd(), "Data/cchs2001.RData")
+    cchs2003: !expr file.path(getwd(), "Data/cchs2003.RData")
+    cchs2005: !expr file.path(getwd(), "Data/cchs2005.RData")
+    cchs2007_2008: !expr file.path(getwd(), "Data/cchs2007_2008.RData")
+    cchs2009_2010: !expr file.path(getwd(), "Data/cchs2009_2010.RData")
+    cchs2011_2012: !expr file.path(getwd(), "Data/cchs2011_2012.RData")
+    cchs2013_2014: !expr file.path(getwd(), "Data/cchs2013_2014.RData")
+    cchs2015_2016: !expr file.path(getwd(), "Data/cchs2015_2016.RData")
+    cchs2017_2018: !expr file.path(getwd(), "Data/cchs2017_2018.RData")

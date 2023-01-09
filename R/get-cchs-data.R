@@ -28,12 +28,12 @@ create_study_data <- function(variables_sheet, variables_details_sheet, cchs_con
     # Using the path, load the .RData file into the environment
     load(cchs_config$data[[data_name]], envir = data_env)
     
-    current_harmonized_data <- recodeflow::rec_with_table(
+    current_harmonized_data <- cchsflow::rec_with_table(
       get(data_name, envir = data_env),
       variables = variables_sheet,
       database_name = data_name,
       variable_details = variables_details_sheet,
-      id_role_name = "id",
+      # id_role_name = "id",
       custom_function_path = "R/custom-functions.R",
       notes = FALSE,
     )

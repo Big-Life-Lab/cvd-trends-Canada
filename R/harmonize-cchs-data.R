@@ -32,12 +32,12 @@ harmonize_cchs_data <- function(
     current_cchs_data <- cchs_data[[current_data_name]]
     
     # The harmonized version of the current cchs dataset
-    current_harmonized_data <- recodeflow::rec_with_table(
+    current_harmonized_data <- cchsflow::rec_with_table(
       current_cchs_data,
       variables = variables_sheet,
       database_name = current_data_name,
       variable_details = variables_details_sheet,
-      id_role_name = "id",
+      # id_role_name = "id",
       custom_function_path = "R/custom-functions.R",
       notes = FALSE,
     )
@@ -53,7 +53,7 @@ harmonize_cchs_data <- function(
     }
   }
   
-  harmonized_data <- recodeflow::set_data_labels(
+  harmonized_data <- cchsflow::set_data_labels(
     harmonized_data, variables_details_sheet, variables_sheet)
   
   return(harmonized_data)
