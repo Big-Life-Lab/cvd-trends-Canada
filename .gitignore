@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 .Rproj.user
 .Rhistory
 .RData
@@ -8,8 +8,8 @@
 targets
 dist
 CANHEART.Rproj
-=======
 
-.Rproj.user/A1A5BFED/sources/s-4AFE1461/lock_file
-.Rproj.user
->>>>>>> paper
+
+worksheet/.DS_Store
+
+.DS_Store
