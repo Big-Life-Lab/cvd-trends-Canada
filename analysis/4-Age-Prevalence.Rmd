@@ -17,12 +17,14 @@ library(tidyr)
 library(survey)
 library(tibble)
 
-
-# Design (male)
+## Design (male)
 combined_male <- harmonized_2001_2014 %>% filter(DHH_SEX == 1)
 combined_male_2015_2018 <- harmonized_bsw %>% filter(DHH_SEX == 1)
 
+# Design for 2001-2014 without bootstrap
 svy_design_male <- as_survey_design(.data=combined_male, weights="WTS_M")
+
+# Design for 2015-2018 with bootstrap
 svy_design_male_2015_2018 <- srvyr::as_survey_rep(combined_male_2015_2018,
                                repweights = starts_with("BSW"),
                                weights = WTS_M,
@@ -30,12 +32,15 @@ svy_design_male_2015_2018 <- srvyr::as_survey_rep(combined_male_2015_2018,
                                bsw.weights = TRUE)
 
 #Design (female)
-combined_female <- harmonized_combined %>% filter(DHH_SEX == 2)
+combined_female <- harmonized_2001_2014 %>% filter(DHH_SEX == 2)
 combined_female_2015_2018 <- harmonized_bsw %>% filter(DHH_SEX == 2)
 
+# Design for 2001-2014 without bootstrap
 svy_design_female <- as_survey_design(.data=combined_female, weights="WTS_M")
+
+# Design for 2015-2018 with bootstrap
 svy_design_female_2015_2018 <- srvyr::as_survey_rep(combined_female_2015_2018,
-                               repweights = starts_with("BSW"),
+                               repweights = starts_with("BSW"),                         
                                weights = WTS_M,
                                type = "bootstrap",
                                bsw.weights = TRUE)
@@ -98,7 +103,7 @@ prev <- function(design, design_bsw, sum_var, filter_value, stdpop){
 }
 
 # Prevalence (blood cholesterol)
-prev_bc <- function(design, design_bsw, sum_var, filter_value, stdpop){
+prev_bc <- function(design_bsw, sum_var, filter_value, stdpop){
   
    # Prevalence for bsw in 2015-2018
   table_ci <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
@@ -164,7 +169,7 @@ db_t1
 ```
 
 ```{r Blood cholesterol}
-bc_t1 <-prev_bc(svy_design, svy_design_2015_2018, CCC_075, 1, pop2011)
+bc_t1 <-prev_bc(svy_design_2015_2018, CCC_075, 1, pop2011)
 bc_t1
 ```
 
@@ -206,7 +211,7 @@ db_t1_m
 ```
 
 ```{r Blood cholesterol}
-bc_t1_m <-prev_bc(svy_design_male, CCC_075, 1, pop2011_male)
+bc_t1_m <-prev_bc(svy_design_male_2015_2018, CCC_075, 1, pop2011_male)
 bc_t1_m
 ```
 
@@ -248,7 +253,7 @@ db_t1_f
 ```
 
 ```{r Blood cholesterol}
-bc_t1_f <-prev_bc(svy_design_female, CCC_075, 1, pop2011_female)
+bc_t1_f <-prev_bc(svy_design_female_2015_2018, CCC_075, 1, pop2011_female)
 bc_t1_f
 ```
 
@@ -304,5 +309,5 @@ all_age_final<- rbind(all_ht_hux, all_db_hux[-1,], all_bmi_hux[-1,], all_mets_hu
 
 # print final table
 quick_xlsx(all_age_final,
-           file = "Table4-Age-Prevalence.xlsx")
+           file = "Table4-Age-Prevalence-BSW.xlsx")
 ```

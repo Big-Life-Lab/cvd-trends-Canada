@@ -20,4 +20,3 @@ hd_female <-prev_as(svy_design_female, svy_design_female_2015_2018, CCC_121, 1, 
 hd_as <-prev_as(svy_design, svy_design_2015_2018, CCC_121, 1, pop2011, "Heart disease")
 
 ```
-
