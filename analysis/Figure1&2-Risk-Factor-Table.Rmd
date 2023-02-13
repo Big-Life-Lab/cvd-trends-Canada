@@ -1,7 +1,7 @@
--- -
-title: "3.5-Risk-Factors"
+---
+title: "Risk Factors"
 author: "Kitty Chen"
-date: "27/03/2022"
+date: 2023-02-06
 output: html_document
 ---
 
@@ -11,7 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Survey design and function
 ```{r}
-library(ggplot2)
 library(dplyr)
 library(cchsflow)
 library(plotly)
@@ -19,13 +18,16 @@ library(srvyr)
 library(survey)
 library(tidyr)
 
-# plot_data <- harmonized_combined %>%
-#   select(year,Immigration, DHH_SEX, Age_Group, CCC_071,CCC_101,CCC_075,activity,HWTGBMI_der_cat4,
-#          Immigration,Alcohol,SMKDSTY_cat3,Risk_factor,WTS_M)
-# 
-# plot_data_2001_2014 <- plot_data[!(plot_data$year==2015|plot_data$year==2017),]
+# Design for 2001-2014 without bootstrap
+harmonized_2001_2014 <- harmonized_combined[!(harmonized_combined$year==2015|harmonized_combined$year==2017),]
+svy_design <- srvyr::as_survey_design(.data=harmonized_2001_2014, weights="WTS_M")
 
-# svy_imm <- as_survey_design(.data=plot_data, weights="WTS_M")
+# Design for 2015-2018 bootstrap
+svy_design_2015_2018 <- srvyr::as_survey_rep(harmonized_bsw,
+                               repweights = starts_with("BSW"),
+                               weights = WTS_M,
+                               type = "bootstrap",
+                               bsw.weights = TRUE)
 
 #2011 census population standardization (age and sex)
 pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
