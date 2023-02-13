@@ -1,0 +1,278 @@
+---
+title: "Prevalence by province"
+author: "Kitty Chen"
+date: 2023-01-20
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Bootstrap CI
+
+## Survey design and function
+```{r}
+library(srvyr)
+library(dplyr)
+library(tidyr)
+library(survey)
+library(tibble)
+
+# Design for 2001-2014 without bootstrap
+harmonized_2001_2014 <- harmonized_combined[!(harmonized_combined$year==2015|harmonized_combined$year==2017),]
+svy_design <- srvyr::as_survey_design(.data=harmonized_2001_2014, weights="WTS_M")
+
+# Design for 2015-2018 bootstrap
+svy_design_2015_2018 <- srvyr::as_survey_rep(harmonized_bsw,
+                               repweights = starts_with("BSW"),
+                               weights = WTS_M,
+                               type = "bootstrap",
+                               bsw.weights = TRUE)
+
+# Design for 2001-2018 without bootstrap 
+svy_design1 <- srvyr::as_survey_design(.data=harmonized_combined, weights="WTS_M")
+
+#2011 census population standardization (age and sex)
+pop2011 <- c(4962765,3524640,3459035,1281440,917340,4910365,3649325,3593270,1393345,1352950)
+
+# Prevalence for provinces and territories
+prev_pt <- function(design, design_bsw, sum_var, filter_value, stdpop){
+  
+  # Prevalence for 2000-2014
+  table_non_bsw <- svystandardize(design, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year, Province, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Prevalence for bsw in 2015-2018
+  table_bsw <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year, Province, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combine table
+  table_ci <- bind_rows(table_non_bsw, table_bsw)
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(4,5)]
+  
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ Province, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with difference
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(3:5)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value
+  
+  return(table_ci)
+}
+
+# Prevalence for provinces and territories (blood cholesterol)
+prev_pt_bc <- function(design_bsw, sum_var, filter_value, stdpop){
+  
+   # Prevalence for bsw in 2015-2018
+  table_ci <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,Province, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(4,5)]
+  
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ Province, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with difference
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2015`) / `2015`*100))
+  
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(3:5)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value 
+  
+  # Add empty columns
+  table_ci <- table_ci %>%
+    add_column("2001" = "-", .before = "2015")%>%
+    add_column("2003" = "-", .before = "2015")%>%
+    add_column("2005" = "-", .before = "2015")%>%
+    add_column("2007" = "-", .before = "2015")%>%
+    add_column("2009" = "-", .before = "2015")%>%
+    add_column("2011" = "-", .before = "2015")%>%
+    add_column("2013" = "-", .before = "2015") 
+  
+  return(table_ci)
+}
+```
+
+## Sub-tables
+```{r All}
+ht_pt <- prev_pt(svy_design, svy_design_2015_2018, svy_design_2015_2018, CCC_071, 1, pop2011)
+db_pt <-prev_pt(svy_design, svy_design_2015_2018, CCC_101, 1, pop2011)
+bc_pt <-prev_pt_bc(svy_design_2015_2018, CCC_075, 1, pop2011)
+bmi_pt <-prev_pt(svy_design, svy_design_2015_2018, HWTGBMI_der_cat4, 4, pop2011)
+mets_pt <- prev_pt(svy_design, svy_design_2015_2018, activity, "Inactive", pop2011)
+smoke_pt <- prev_pt(svy_design, svy_design_2015_2018, SMKDSTY_cat3, 1, pop2011)
+alc_pt <-prev_pt(svy_design, svy_design_2015_2018, Alcohol, 4, pop2011)
+
+```
+
+## Final table
+```{r Full table - huxtable}
+all_pt <- as.data.frame(rbind(ht_pt, db_pt, bmi_pt, mets_pt, smoke_pt, alc_pt))
+all_pt <- as.data.frame(rbind(all_pt, bc_pt))
+library(huxtable)
+library(Rcpp)
+library(openxlsx)
+
+all_pt_final<-as_hux(all_pt) %>%
+  theme_article()%>%
+  insert_row(c("Hypertension", "","","","","","","","","","",""),after = 1) %>%
+  insert_row(c("Diabetes", "","","","","","","","","","",""),after = 13) %>%
+  insert_row(c("Obesity", "","","","","","","","","","",""),after = 25) %>%
+  insert_row(c("Physical inactivity", "","","","","","","","","","",""),after = 37) %>%
+  insert_row(c("Current smoker", "","","","","","","","","","",""),after = 49) %>%
+  insert_row(c("Heavy drinker", "","","","","","","","","","",""),after = 61) %>%
+  insert_row(c("High blood cholesterol", "","","","","","","","","","",""),after = 73)%>%
+  set_bold(14,1)%>%
+  set_bold(26,1)%>%
+  set_bold(38,1)%>%
+  set_bold(50,1)%>%
+  set_bold(62,1)%>%
+  set_bold(74,1)%>%
+  set_top_border(row =10) 
+print(all_pt_final)
+
+# print final table
+quick_xlsx(all_pt_final, file = "Table5-Regional-Prevalence-BSW.xlsx")
+```
+
+### Non-bootstrap CI
+
+## Survey design and function
+```{r CI without bsw}
+# Prevalence for provinces and territories
+prev_pt_nonbsw <- function(design, sum_var, filter_value, stdpop){
+  
+  # Prevalence for 2000-2018
+  table_ci <- svystandardize(design, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year, Province, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(4,5)]
+  
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ Province, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with difference
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(3:5)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value
+  
+  return(table_ci)
+}
+
+```
+
+
+## Sub-tables
+```{r}
+ht_pt_non <- prev_pt_nonbsw(svy_design1, CCC_071, 1, pop2011)
+db_pt_non <-prev_pt_nonbsw(svy_design1, CCC_101, 1, pop2011)
+bmi_pt_non <-prev_pt_nonbsw(svy_design1, HWTGBMI_der_cat4, 4, pop2011)
+mets_pt_non <- prev_pt_nonbsw(svy_design1, activity, "Inactive", pop2011)
+smoke_pt_non <- prev_pt_nonbsw(svy_design1, SMKDSTY_cat3, 1, pop2011)
+alc_pt_non <-prev_pt_nonbsw(svy_design1, Alcohol, 4, pop2011)
+bc_pt_non <- prev_pt_bc(svy_design1, CCC_075, 1, pop2011)
+```
+
+
+## Final table
+```{r}
+all_pt_non <- as.data.frame(rbind(ht_pt_non, db_pt_non, bmi_pt_non, mets_pt_non, smoke_pt_non, alc_pt_non))
+all_pt_non <- as.data.frame(rbind(all_pt_non, bc_pt_non))
+library(huxtable)
+library(Rcpp)
+library(openxlsx)
+
+all_pt_non_final<-as_hux(all_pt_non) %>%
+  theme_article()%>%
+  insert_row(c("Hypertension", "","","","","","","","","","",""),after = 1) %>%
+  insert_row(c("Diabetes", "","","","","","","","","","",""),after = 13) %>%
+  insert_row(c("Obesity", "","","","","","","","","","",""),after = 25) %>%
+  insert_row(c("Physical inactivity", "","","","","","","","","","",""),after = 37) %>%
+  insert_row(c("Current smoker", "","","","","","","","","","",""),after = 49) %>%
+  insert_row(c("Heavy drinker", "","","","","","","","","","",""),after = 61) %>%
+  insert_row(c("High blood cholesterol", "","","","","","","","","","",""),after = 73)%>%
+  set_bold(14,1)%>%
+  set_bold(26,1)%>%
+  set_bold(38,1)%>%
+  set_bold(50,1)%>%
+  set_bold(62,1)%>%
+  set_bold(74,1)%>%
+  set_top_border(row =10) 
+print(all_pt_non_final)
+
+# print final table
+quick_xlsx(all_pt_non_final, file = "Table5-Regional-Prevalence-nonBSW.xlsx")
+```
+

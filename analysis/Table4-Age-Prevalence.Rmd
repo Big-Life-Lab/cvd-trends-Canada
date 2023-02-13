@@ -1,13 +1,15 @@
 ---
-title: "4-Age-Prevalence"
+title: "Age Prevalence"
 author: "Kitty Chen"
-date: "19/11/2021"
+# date: 2023-02-06
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+### Bootstrap CI
 
 ## Survey design and function
 ```{r message=FALSE, warning=FALSE}
@@ -157,129 +159,43 @@ prev_bc <- function(design_bsw, sum_var, filter_value, stdpop){
 ```
 
 ## Both sex - sub-tables
-
-```{r Hypertension}
+```{r All}
 ht_t1 <-prev(svy_design, svy_design_2015_2018, CCC_071, 1, pop2011)
-ht_t1 
-```
-
-```{r Diabetes}
 db_t1 <-prev(svy_design, svy_design_2015_2018, CCC_101, 1, pop2011)
-db_t1
-```
-
-```{r Blood cholesterol}
 bc_t1 <-prev_bc(svy_design_2015_2018, CCC_075, 1, pop2011)
-bc_t1
-```
-
-```{r Obesity}
 bmi_t1 <-prev(svy_design, svy_design_2015_2018, HWTGBMI_der_cat4, 4, pop2011)
-bmi_t1
-```
-
-```{r Physical inactivity}
 mets_t1 <- prev(svy_design, svy_design_2015_2018, activity, "Inactive", pop2011)
-mets_t1
-```
-
-```{r Smoking}
 smoke_t1 <- prev(svy_design, svy_design_2015_2018, SMKDSTY_cat3, 1, pop2011)
-smoke_t1
-```
-
-```{r Drinking}
 alc_t1 <-prev(svy_design, svy_design_2015_2018, Alcohol, 4, pop2011)
-alc_t1
-```
-
-```{r Full table}
-# Tb_t1 <- gtsummary::tbl_stack(list(alc_tb, bmi_tb,db_tb,ht_tb, mets_tb,smoke_tb, pop2011), pop2011)
 
 ```
 
 ## Male - sub-tables
-
-```{r Hypertension}
+```{r Male}
 ht_t1_m <-prev(svy_design_male, svy_design_male_2015_2018, CCC_071, 1, pop2011_male)
-ht_t1_m 
-```
-
-```{r Diabetes}
 db_t1_m <-prev(svy_design_male, svy_design_male_2015_2018, CCC_101, 1, pop2011_male)
-db_t1_m
-```
-
-```{r Blood cholesterol}
 bc_t1_m <-prev_bc(svy_design_male_2015_2018, CCC_075, 1, pop2011_male)
-bc_t1_m
-```
-
-```{r Obesity}
 bmi_t1_m <-prev(svy_design_male, svy_design_male_2015_2018, HWTGBMI_der_cat4, 4, pop2011_male)
-bmi_t1_m
-```
-
-```{r Physical inactivity}
 mets_t1_m <- prev(svy_design_male, svy_design_male_2015_2018, activity, "Inactive", pop2011_male)
-mets_t1_m
-```
-
-```{r Smoking}
 smoke_t1_m <- prev(svy_design_male, svy_design_male_2015_2018, SMKDSTY_cat3, 1, pop2011_male)
-smoke_t1_m
-```
-
-```{r Drinking}
 alc_t1_m <-prev(svy_design_male, svy_design_male_2015_2018, Alcohol, 4, pop2011_male)
-alc_t1_m
-```
-
-```{r Full table}
-# Tb_t1_m <- gtsummary::tbl_stack(list(alc_tb, bmi_tb,db_tb,ht_tb, mets_tb,smoke_tb, pop2011), pop2011)
 
 ```
 
 ## Female - sub-tables
-
-```{r Hypertension}
+```{r Female}
 ht_t1_f <-prev(svy_design_female, svy_design_female_2015_2018, CCC_071, 1, pop2011_female)
-ht_t1_f 
-```
-
-```{r Diabetes}
 db_t1_f <-prev(svy_design_female, svy_design_female_2015_2018, CCC_101, 1, pop2011_female)
-db_t1_f
-```
-
-```{r Blood cholesterol}
 bc_t1_f <-prev_bc(svy_design_female_2015_2018, CCC_075, 1, pop2011_female)
-bc_t1_f
-```
-
-```{r Obesity}
 bmi_t1_f <-prev(svy_design_female, svy_design_female_2015_2018, HWTGBMI_der_cat4, 4, pop2011_female)
-bmi_t1_f
-```
-
-```{r Physical inactivity}
 mets_t1_f <- prev(svy_design_female, svy_design_female_2015_2018, activity, "Inactive", pop2011_female)
-mets_t1_f
-```
-
-```{r Smoking}
 smoke_t1_f <- prev(svy_design_female, svy_design_female_2015_2018, SMKDSTY_cat3, 1, pop2011_female)
-smoke_t1_f
-```
-
-```{r Drinking}
 alc_t1_f <-prev(svy_design_female, svy_design_female_2015_2018, Alcohol, 4, pop2011_female)
-alc_t1_f
-```
 
+```
 
 ## Final table
-```{r}
+```{r Final table}
 library(huxtable)
 hux<- function(risk, riskm, riskf, title){
   all <- rbind(risk, riskm, riskf)
