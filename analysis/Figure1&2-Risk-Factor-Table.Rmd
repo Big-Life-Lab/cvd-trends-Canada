@@ -1,0 +1,190 @@
+---
+title: "Risk Factors"
+author: "Kitty Chen"
+date: 2023-02-06
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Survey design and function
+```{r}
+library(dplyr)
+library(cchsflow)
+library(plotly)
+library(srvyr)
+library(survey)
+library(tidyr)
+
+# Design for 2001-2014 without bootstrap
+harmonized_2001_2014 <- harmonized_combined[!(harmonized_combined$year==2015|harmonized_combined$year==2017),]
+svy_design <- srvyr::as_survey_design(.data=harmonized_2001_2014, weights="WTS_M")
+
+# Design for 2015-2018 bootstrap
+svy_design_2015_2018 <- srvyr::as_survey_rep(harmonized_bsw,
+                               repweights = starts_with("BSW"),
+                               weights = WTS_M,
+                               type = "bootstrap",
+                               bsw.weights = TRUE)
+
+#2011 census population standardization (age and sex)
+pop2011 <- c(662225,7223115,3459020,1699390,499385,628080,7358600,3593260,1898090,848200)
+
+```
+
+```{r Prevalence by immigration}
+prev_imm <- function(design, design_bsw, sum_var, filter_value, stdpop){
+  
+  # Prevalence for 2000-2014
+  table_non_bsw <- svystandardize(design, by = ~Age_Group+DHH_SEX, 
+                                  population = stdpop)%>%
+    group_by(year, Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Prevalence for bsw in 2015-2018
+  table_bsw <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, 
+                              population = stdpop)%>%
+    group_by(year, Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combine table
+  table_ci <- bind_rows(table_non_bsw, table_bsw)
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(4,5)]
+  
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ Immigration, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with difference
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(3:5)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value
+  
+  return(table_ci)
+}
+
+## Blood cholesterol
+
+prev_imm_bc <- function(design_bsw, sum_var, filter_value, stdpop){
+  
+   # Prevalence for bsw in 2015-2018
+  table_ci <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, 
+                             population = stdpop)%>%
+    group_by(year, Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(4,5)]
+  
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ Immigration, data = table))
+  pval_col <-as.numeric(pval$coefficients[,"Pr(>|t|)"])
+  
+  # Complete table with difference
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2015`) / `2015`*100))
+  
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(3:5)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value 
+  
+  # Add empty columns
+  table_ci <- table_ci %>%
+    add_column("2001" = "-", .before = "2015")%>%
+    add_column("2003" = "-", .before = "2015")%>%
+    add_column("2005" = "-", .before = "2015")%>%
+    add_column("2007" = "-", .before = "2015")%>%
+    add_column("2009" = "-", .before = "2015")%>%
+    add_column("2011" = "-", .before = "2015")%>%
+    add_column("2013" = "-", .before = "2015") 
+  
+  return(table_ci)
+}
+```
+
+## Tables 
+```{r Hypertension}
+ht_imm <-prev_imm(svy_design, svy_design_2015_2018, CCC_071, 1, pop2011)
+
+```
+
+```{r Diabetes}
+db_imm <-prev_imm(svy_design, svy_design_2015_2018, CCC_101, 1, pop2011)
+
+```
+
+```{r Blood cholesterol}
+bc_imm <-prev_imm_bc(svy_design, svy_design_2015_2018, CCC_075, 1, pop2011)
+
+```
+
+```{r Obesity}
+bmi_imm <-prev_imm(svy_design, svy_design_2015_2018, HWTGBMI_der_cat4, 4, pop2011)
+
+```
+
+```{r Physical inactivity}
+mets_imm <- prev_imm(svy_design, svy_design_2015_2018, activity, "Inactive", pop2011)
+
+```
+
+```{r Smoking}
+smoke_imm <- prev_imm(svy_design, svy_design_2015_2018, SMKDSTY_cat3, 1, pop2011)
+
+```
+
+```{r Drinking}
+alc_imm <-prev_imm(svy_design, svy_design_2015_2018, Alcohol, 4, pop2011)
+
+```
+
+```{r Heart disease}
+hd_imm <-prev_imm(svy_design, svy_design_2015_2018, CCC_121, 1, pop2011)
+
+```
+
+```{r 2+ risk factors}
+rf_imm <-prev_imm(svy_design, svy_design_2015_2018, Risk_factor, "2+", pop2011)
+
+```

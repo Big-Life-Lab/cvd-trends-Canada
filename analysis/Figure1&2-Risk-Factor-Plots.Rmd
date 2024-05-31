@@ -1,0 +1,183 @@
+---
+title: "3-Risk-factor-plots"
+author: "Kitty Chen"
+date: "27/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Survey design and function
+```{r}
+library(ggplot2)
+library(dplyr)
+library(cchsflow)
+library(plotly)
+library(srvyr)
+library(survey)
+library(tidyr)
+
+# Design for 2001-2014 without bootstrap
+harmonized_2001_2014 <- harmonized_combined[!(harmonized_combined$year==2015|harmonized_combined$year==2017),]
+svy_design <- srvyr::as_survey_design(.data=harmonized_2001_2014, weights="WTS_M")
+
+# Design for 2015-2018 bootstrap
+svy_design_2015_2018 <- srvyr::as_survey_rep(harmonized_bsw,
+                               repweights = starts_with("BSW"),
+                               weights = WTS_M,
+                               type = "bootstrap",
+                               bsw.weights = TRUE)
+
+#2011 census population standardization (age and sex)
+pop2011 <- c(662225,7223115,3459020,1699390,499385,628080,7358600,3593260,1898090,848200)
+
+```
+
+```{r}
+# Prevalence
+prev_plot <- function(design, design_bsw, sum_var, filter_value, stdpop, startyear, maxy, title){
+  
+  # Prevalence for 2000-2014
+  table_non_bsw <- svystandardize(design, by = ~Age_Group+DHH_SEX,
+                                  population = stdpop)%>%
+    group_by(year, Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  temp2014 <- data.frame(year=rep(2014, each=6),
+             Immigration=c("Non-racialized and non-Indigenous Canada-born",
+                           'Non-racialized and non-Indigenous established immigrant',
+                           'Racialized recent immigrant',
+                           "Racialized Canada-born",
+                           'Racialized established immigrant',
+                           'Non-racialized and non-Indigenous recent immigrant' ),
+             Prevalence=NA,
+             Prevalence_low=NA,
+             Prevalence_upp=NA)
+  
+  table_non_bsw <- rbind(table_non_bsw, temp2014)
+  
+  # Prevalence for bsw in 2015-2018
+  table_bsw <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX,
+                              population = stdpop)%>%
+    group_by(year, Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+
+  # Combine table
+  table_ci <- bind_rows(table_non_bsw, table_bsw)
+  
+  
+  # Plot
+  plot <- ggplot(table_ci, aes(x=year, y=Prevalence))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
+  ylab("Prevalence (%)")+
+  xlab("Year")+
+  ggtitle(title)+
+  labs(colours="Migration Groups")+
+  theme(plot.title = element_text(hjust = 0.5),
+        # legend.position = "none",
+        # panel.grid.major = element_blank(),
+        # panel.grid.minor = element_blank(),
+        # panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(colour = "black", fill=NA))+
+  scale_y_continuous(limit=c(0, maxy))+
+  scale_x_discrete(limits=c(2001,2005,2009,2013,2017))+
+  scale_color_brewer(palette = "Paired") +
+  # geom_vline(xintercept = 2015, linetype="dashed") +
+  geom_ribbon(aes(ymin = Prevalence_low, ymax = Prevalence_upp, fill = Immigration),
+              alpha=0.1, linetype="dashed", color="grey")
+    
+
+  return(plot)
+}
+
+# Prevalence (blood cholesterol)
+prev_plot_bc <- function(design_bsw, sum_var, filter_value, stdpop, startyear, title){
+  
+  # Prevalence for bsw in 2015-2018
+  table_ci <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX,
+                              population = stdpop)%>%
+    group_by(year, Immigration, {{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Plot
+  plot <- ggplot(table_ci, aes(x=year, y=Prevalence))+
+  geom_line(aes(colour=Immigration))+
+  geom_point(aes(colour=Immigration)) +
+  ylab("Prevalence (%)")+
+  xlab("Year")+
+  ggtitle(title)+
+  labs(colours="Migration Groups")+
+  theme(plot.title = element_text(hjust = 0.5),
+        # legend.position = "none",
+        # panel.grid.major = element_blank(),
+        # panel.grid.minor = element_blank(),
+        # panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(colour = "black", fill=NA))+
+  scale_y_continuous(limit=c(0,25))+
+  scale_x_discrete(limits=c(2015,2017))+
+  scale_color_brewer(palette = "Paired") +
+  # geom_vline(xintercept = 2015, linetype="dashed") +
+  geom_ribbon(aes(ymin = Prevalence_low, ymax = Prevalence_upp, fill = Immigration),
+              alpha=0.1, linetype="dashed", color="grey")
+
+  return(plot)
+}
+
+```
+
+## Plots 
+```{r Hypertension}
+ht_plot <-prev_plot(svy_design, svy_design_2015_2018, CCC_071, 1, pop2011, 2001, 62,"Hypertension")
+ggplotly(ht_plot)
+```
+
+```{r Diabetes}
+db_plot <-prev_plot(svy_design, svy_design_2015_2018, CCC_101, 1, pop2011, 2001, 25, "Diabetes")
+ggplotly(db_plot)
+```
+
+```{r Blood cholesterol}
+bc_plot <-prev_plot_bc(svy_design_2015_2018, CCC_075, 1, pop2011, 2015, "High blood cholesterol")
+ggplotly(bc_plot)
+```
+
+```{r Obesity}
+bmi_plot <-prev_plot(svy_design, svy_design_2015_2018, HWTGBMI_der_cat4, 4, pop2011, 25, "Obesity")
+ggplotly(bmi_plot)
+```
+
+```{r Physical inactivity}
+mets_plot <- prev_plot(svy_design, svy_design_2015_2018, activity, "Inactive", pop2011, 2001, 62, "Physical inactivity")
+ggplotly(mets_plot)
+```
+
+```{r Smoking}
+smoke_plot <- prev_plot(svy_design, svy_design_2015_2018, SMKDSTY_cat3, 1, pop2011, 2001, 62, "Current smoker")
+ggplotly(smoke_plot)
+```
+
+```{r Drinking}
+alc_plot <-prev_plot(svy_design, svy_design_2015_2018, Alcohol, 4, pop2011, 2001, 25, "Heavy drinker")
+ggplotly(alc_plot)
+```
+
+```{r Heart disease}
+hd_plot <-prev_plot(svy_design, svy_design_2015_2018, CCC_121, 1, pop2011, 2001, 25, "Heart disease")
+ggplotly(hd_plot)  
+```
+
+```{r 2+ risk factors}
+rf_plot <-prev_plot(svy_design, svy_design_2015_2018, Risk_factor, "2+", pop2011, 2001, "2+ risk factors")
+ggplotly(rf_plot)
+```
