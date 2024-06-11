@@ -1,0 +1,29 @@
+---
+title: "Heart disease"
+author: "Kitty Chen"
+# date: 2023-02-06
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Heart disease
+
+```{r}
+hd_age<-prev(svy_design, svy_design_2015_2018, CCC_121, 1, pop2011)
+hd_pt<-prev_pt(svy_design, svy_design_2015_2018, CCC_121, 1, pop2011)
+hd_imm <- prev_imm(svy_design, svy_design_2015_2018, CCC_121, 1, pop2011)
+hd_male<-prev_as(svy_design_male, svy_design_male_2015_2018, CCC_121, 1, pop2011_male, "Male")
+hd_female <-prev_as(svy_design_female, svy_design_female_2015_2018, CCC_121, 1, pop2011_female, "Female")
+hd_as <-prev_as(svy_design, svy_design_2015_2018, CCC_121, 1, pop2011, "Heart disease")
+
+```
+
+```{r}
+# Print heart disease figure
+huxtable::quick_xlsx(hd_imm,
+           file = "Figure1-Heart-Disease-Plot-BSW.xlsx")
+```
+
