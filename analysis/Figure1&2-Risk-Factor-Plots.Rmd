@@ -19,6 +19,8 @@ library(srvyr)
 library(survey)
 library(tidyr)
 
+source("R/harmonized_data.R")
+
 # Design for 2001-2014 without bootstrap
 harmonized_2001_2014 <- harmonized_combined[!(harmonized_combined$year==2015|harmonized_combined$year==2017),]
 svy_design <- srvyr::as_survey_design(.data=harmonized_2001_2014, weights="WTS_M")

@@ -13,6 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r Factoring each variable, message=FALSE, warning=FALSE, include=FALSE}
 library(dplyr)
 
+source("R/harmonized_data.R")
+
 T1 <- harmonized_combined
 
 # Sex
