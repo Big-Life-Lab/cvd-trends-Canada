@@ -1,0 +1,351 @@
+---
+title: "Age-Sex Prevalence"
+author: "Kitty Chen"
+# date: 2023-02-06
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Survey design and function
+```{r Design and functions}
+library(srvyr)
+library(dplyr)
+library(tidyr)
+library(survey)
+library(tibble)
+
+source("R/harmonized_data.R")
+
+# Design for 2001-2014 without bootstrap
+harmonized_2001_2014 <- harmonized_combined[!(harmonized_combined$year==2015|harmonized_combined$year==2017),]
+
+# Design (male)
+combined_male <- harmonized_2001_2014 %>% filter(DHH_SEX == 1)
+combined_male_2015_2018 <- harmonized_bsw %>% filter(DHH_SEX == 1)
+
+svy_design_male <- as_survey_design(.data=combined_male, weights="WTS_M")
+svy_design_male_2015_2018 <- srvyr::as_survey_rep(combined_male_2015_2018,
+                               repweights = starts_with("BSW"),
+                               weights = WTS_M,
+                               type = "bootstrap",
+                               bsw.weights = TRUE)
+
+#Design (female)
+combined_female <- harmonized_2001_2014 %>% filter(DHH_SEX == 2)
+combined_female_2015_2018 <- harmonized_bsw %>% filter(DHH_SEX == 2)
+
+svy_design_female <- as_survey_design(.data=combined_female, weights="WTS_M")
+svy_design_female_2015_2018 <- srvyr::as_survey_rep(combined_female_2015_2018,
+                               repweights = starts_with("BSW"),
+                               weights = WTS_M,
+                               type = "bootstrap",
+                               bsw.weights = TRUE)
+
+#2011 census population standardization
+pop2011 <- c(662225,7223115,3459020,1699390,499385,628080,7358600,3593260,1898090,848200)
+pop2011_male <-c(662225,7223115,3459020,1699390,499385)
+pop2011_female <-c(628080,7358600,3593260,1898090,848200)
+
+# Prevalence (adjusted for age and sex)
+prev_as <- function(design, design_bsw, sum_var, filter_value, stdpop, title){
+  
+  # Prevalence for 2000-2014
+  table_non_bsw <- svystandardize(design, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,{{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+
+  # Prevalence for bsw in 2015-2018
+  table_bsw <- svystandardize(design_bsw, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,{{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combine table
+  table_ci <- bind_rows(table_non_bsw, table_bsw)
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(3,4)]
+  
+  # Generate p-value from regression (age and sex adjusted)
+  pval <- summary(lm(Prevalence ~ year, data = table))
+  pval_col <-as.numeric(pval$coefficients[2,"Pr(>|t|)"])
+
+  # Complete table with difference
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(2:4)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value
+  
+  # Add characteristic name
+  table_ci <- table_ci %>%
+    add_column(Characteristic = title, .before = "2001")
+  
+  return(table_ci)
+}
+
+prev_as_bc <- function(design_bsw, sum_var, filter_value, stdpop, title){
+  
+  # Prevalence 
+  table_ci <- svystandardize(design_bsw,by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,{{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(3,4)]
+
+  # Generate p-value from regression
+  pval <- summary(lm(Prevalence ~ year, data = table))
+  pval_col <-as.numeric(pval$coefficients[2,"Pr(>|t|)"])
+
+  # Complete table with p-value
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2015`) / `2015`*100))
+  
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+   # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(2:4)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value 
+  
+  # Add characteristic name and add empty column
+  table_ci <- table_ci %>%
+    add_column("2001" = "-", .before = "2015")%>%
+    add_column("2003" = "-", .before = "2015")%>%
+    add_column("2005" = "-", .before = "2015")%>%
+    add_column("2007" = "-", .before = "2015")%>%
+    add_column("2009" = "-", .before = "2015")%>%
+    add_column("2011" = "-", .before = "2015")%>%
+    add_column("2013" = "-", .before = "2015") %>%
+    add_column(Characteristic = title, .before = "2001")
+  
+  return(table_ci)
+}
+```
+
+## Both sex - sub-tables
+```{r All}
+ht_as <- prev_as(svy_design, svy_design_2015_2018, CCC_071, 1, pop2011, "Hypertension")
+db_as <-prev_as(svy_design, svy_design_2015_2018, CCC_101, 1, pop2011, "Diabetes")
+bc_as <-prev_as_bc(svy_design_2015_2018, CCC_075, 1, pop2011, "High blood cholesterol")
+bmi_as <-prev_as(svy_design, svy_design_2015_2018, HWTGBMI_der_cat4, 4, pop2011, "Obesity")
+mets_as <- prev_as(svy_design, svy_design_2015_2018, activity, "Inactive", pop2011, "Physical inactivity")
+smoke_as <- prev_as(svy_design, svy_design_2015_2018, SMKDSTY_cat3, 1, pop2011, "Current smoker")
+alc_as <-prev_as(svy_design, svy_design_2015_2018, Alcohol, 4, pop2011, "Heavy drinker")
+hd_as <-prev_as(svy_design, svy_design_2015_2018, CCC_121, 1, pop2011, "Heart disease")                                                
+```
+
+## Male - sub-tables
+```{r Male, warning=FALSE}
+ht_a_male <- prev_as(svy_design_male, svy_design_male_2015_2018, CCC_071, 1, pop2011_male, "Hypertension")
+db_a_male <-prev_as(svy_design_male, svy_design_male_2015_2018, CCC_101, 1, pop2011_male, "Diabetes")
+bc_a_male <-prev_as_bc(svy_design_male_2015_2018, CCC_075, 1, pop2011_male, "High blood cholesterol")
+bmi_a_male <-prev_as(svy_design_male, svy_design_male_2015_2018, HWTGBMI_der_cat4, 4, pop2011_male, "Obesity")
+mets_a_male <- prev_as(svy_design_male, svy_design_male_2015_2018, activity, "Inactive", pop2011_male, "Physical inactivity")
+smoke_a_male <- prev_as(svy_design_male, svy_design_male_2015_2018, SMKDSTY_cat3, 1, pop2011_male, "Current smoker")
+alc_a_male <-prev_as(svy_design_male, svy_design_male_2015_2018, Alcohol, 4, pop2011_male, "Heavy drinker")
+hd_a_male<-prev_as(svy_design_male, svy_design_male_2015_2018, CCC_121, 1, pop2011_male, "Heart disease")
+```
+
+## Female - sub-tables
+```{r Female, warning=FALSE}
+ht_a_female <- prev_as(svy_design_female, svy_design_female_2015_2018, CCC_071, 1, pop2011_female, "Hypertension")
+db_a_female <-prev_as(svy_design_female, svy_design_female_2015_2018, CCC_101, 1, pop2011_female, "Diabetes")
+bc_a_female <-prev_as_bc(svy_design_female_2015_2018, CCC_075, 1, pop2011_female, "High blood cholesterol")
+bmi_a_female <-prev_as(svy_design_female, svy_design_female_2015_2018, HWTGBMI_der_cat4, 4, pop2011_female, "Obesity")
+mets_a_female <- prev_as(svy_design_female, svy_design_female_2015_2018, activity, "Inactive", pop2011_female, "Physical inactivity")
+smoke_a_female <- prev_as(svy_design_female, svy_design_female_2015_2018, SMKDSTY_cat3, 1, pop2011_female, "Current smoker")
+alc_a_female <-prev_as(svy_design_female, svy_design_female_2015_2018, Alcohol, 4, pop2011_female, "Heavy drinker")
+hd_a_female <-prev_as(svy_design_female, svy_design_female_2015_2018, CCC_121, 1, pop2011_female, "Heart disease")
+```
+
+## Final table
+```{r Combined - huxtable}
+as <- rbind(ht_as, db_as, bmi_as, mets_as, smoke_as, alc_as, bc_as)
+a_male <- rbind(ht_a_male, db_a_male, bmi_a_male, mets_a_male, smoke_a_male, alc_a_male, bc_a_male)
+a_female <- rbind(ht_a_female, db_a_female, bmi_a_female, mets_a_female, smoke_a_female, alc_a_female, bc_a_female)
+
+all_as <- rbind(as, a_male, a_female) %>%
+  rename("Relative change, %" = Difference,
+         "p-value" = p_value)
+all_as <- as.data.frame(all_as)
+
+library(huxtable)
+
+all_as_hx<-as_hux(all_as)
+all_as_final<-all_as_hx %>%
+  theme_article()%>%
+  insert_row(c("Both sexes", "","","","","","","","","","",""),after = 1) %>%
+  insert_row(c("Male", "","","","","","","","","","",""),after = 9) %>%
+  insert_row(c("Female", "","","","","","","","","","",""),after = 17) %>%
+  set_bold(10,1)%>%
+  set_bold(18,1)%>%
+  set_top_border(row =10) 
+print(all_as_final)
+
+# print final table
+quick_xlsx(all_as_final,
+           file = "Table3-Age-Sex-Prevalence-BSW.xlsx")
+```
+
+
+### Non-bootstrap CI
+
+## Survey design and function
+```{r}
+# Design (male)
+combined_male1 <- harmonized_combined %>% filter(DHH_SEX == 1)
+svy_design_male1 <- as_survey_design(.data=combined_male1, weights="WTS_M")
+
+# Design (female)
+combined_female1 <- harmonized_combined %>% filter(DHH_SEX == 2)
+svy_design_female1 <- as_survey_design(.data=combined_female1, weights="WTS_M")
+
+# Prevalence (adjusted for age and sex)
+prev_as_nonbsw <- function(design, sum_var, filter_value, stdpop, title){
+  
+  # Prevalence for 2000-2018
+  table_ci <- svystandardize(design, by = ~Age_Group+DHH_SEX, population = stdpop)%>%
+    group_by(year,{{sum_var}}) %>%
+    summarise(Prevalence = round(survey_mean(vartype = "ci")*100, 2)) %>%
+    filter({{sum_var}} == filter_value) %>%
+    select(-{{sum_var}})
+  
+  # Combined table without confidence interval
+  table <- table_ci[,-c(3,4)]
+  
+  # Generate p-value from regression (age and sex adjusted)
+  pval <- summary(lm(Prevalence ~ year, data = table))
+  pval_col <-as.numeric(pval$coefficients[2,"Pr(>|t|)"])
+
+  # Complete table with difference
+  table1 <- table %>%
+    spread(year, Prevalence) %>%
+    mutate(Difference = ((`2017` - `2001`) / `2001`*100))
+  
+  table1$p_value <- pval_col
+  
+  table1 <- table1 %>% 
+    mutate(across(everything(),round, 2)) %>%
+    mutate(p_value = case_when(p_value < 0.01 ~ "< 0.01",
+                               TRUE ~  as.character(p_value)))
+  
+  # Add CI to final table
+  table_ci$Prevalence_CI <-paste0(table_ci$Prevalence, " (", 
+                                  table_ci$Prevalence_low,",", 
+                                  table_ci$Prevalence_upp, ")")
+  table_ci <- table_ci[,-c(2:4)]
+  table_ci <- table_ci %>%
+    spread(year, Prevalence_CI)
+  table_ci$Difference <- table1$Difference
+  table_ci$p_value <- table1$p_value
+  
+  # Add characteristic name
+  table_ci <- table_ci %>%
+    add_column(Characteristic = title, .before = "2001")
+  
+  return(table_ci)
+}
+
+```
+
+## Both sex - sub-tables
+```{r All}
+ht_as_non <- prev_as_nonbsw(svy_design1, CCC_071, 1, pop2011, "Hypertension")
+db_as_non <-prev_as_nonbsw(svy_design1, CCC_101, 1, pop2011, "Diabetes")
+bc_as_non <-prev_as_bc(svy_design1, CCC_075, 1, pop2011, "High blood cholesterol")
+bmi_as_non <-prev_as_nonbsw(svy_design1, HWTGBMI_der_cat4, 4, pop2011, "Obesity")
+mets_as_non <- prev_as_nonbsw(svy_design1, activity, "Inactive", pop2011, "Physical inactivity")
+smoke_as_non <- prev_as_nonbsw(svy_design1, SMKDSTY_cat3, 1, pop2011, "Current smoker")
+alc_as_non <-prev_as_nonbsw(svy_design1, Alcohol, 4, pop2011, "Heavy drinker")
+hd_as_non <-prev_as_nonbsw(svy_design1, CCC_121, 1, pop2011, "Heart disease")                                                
+```
+
+## Male - sub-tables
+```{r Male, warning=FALSE}
+ht_a_male_non <- prev_as_nonbsw(svy_design_male1, CCC_071, 1, pop2011_male, "Hypertension")
+db_a_male_non <-prev_as_nonbsw(svy_design_male1, CCC_101, 1, pop2011_male, "Diabetes")
+bc_a_male_non <-prev_as_bc(svy_design_male1, CCC_075, 1, pop2011_male, "High blood cholesterol")
+bmi_a_male_non <-prev_as_nonbsw(svy_design_male1, HWTGBMI_der_cat4, 4, pop2011_male, "Obesity")
+mets_a_male_non <- prev_as_nonbsw(svy_design_male1, activity, "Inactive", pop2011_male, "Physical inactivity")
+smoke_a_male_non <- prev_as_nonbsw(svy_design_male1, SMKDSTY_cat3, 1, pop2011_male, "Current smoker")
+alc_a_male_non <-prev_as_nonbsw(svy_design_male1, Alcohol, 4, pop2011_male, "Heavy drinker")
+hd_a_male_non<-prev_as_nonbsw(svy_design_male1, CCC_121, 1, pop2011_male, "Heart disease")
+```
+
+## Female - sub-tables
+```{r Female, warning=FALSE}
+ht_a_female_non <- prev_as_nonbsw(svy_design_female1, CCC_071, 1, pop2011_female, "Hypertension")
+db_a_female_non <-prev_as_nonbsw(svy_design_female1, CCC_101, 1, pop2011_female, "Diabetes")
+bc_a_female_non <-prev_as_bc(svy_design_female1, CCC_075, 1, pop2011_female, "High blood cholesterol")
+bmi_a_female_non <-prev_as_nonbsw(svy_design_female1, HWTGBMI_der_cat4, 4, pop2011_female, "Obesity")
+mets_a_female_non <- prev_as_nonbsw(svy_design_female1, activity, "Inactive", pop2011_female, "Physical inactivity")
+smoke_a_female_non <- prev_as_nonbsw(svy_design_female1, SMKDSTY_cat3, 1, pop2011_female, "Current smoker")
+alc_a_female_non <-prev_as_nonbsw(svy_design_female1, Alcohol, 4, pop2011_female, "Heavy drinker")
+hd_a_female_non <-prev_as_nonbsw(svy_design_female1, CCC_121, 1, pop2011_female, "Heart disease")
+```
+
+## Final table
+```{r Combined - huxtable}
+as_non <- rbind(ht_as_non, db_as_non, bmi_as_non, mets_as_non, smoke_as_non, alc_as_non, bc_as_non)
+a_male_non <- rbind(ht_a_male_non, db_a_male_non, bmi_a_male_non, mets_a_male_non, smoke_a_male_non, alc_a_male_non, bc_a_male_non)
+a_female_non <- rbind(ht_a_female_non, db_a_female_non, bmi_a_female_non, mets_a_female_non, smoke_a_female_non, alc_a_female_non, bc_a_female_non)
+
+all_as_non <- rbind(as_non, a_male_non, a_female_non) %>%
+  rename("Relative change, %" = Difference,
+         "p-value" = p_value)
+all_as_non <- as.data.frame(all_as_non)
+
+library(huxtable)
+
+all_as_non_hx <- as_hux(all_as_non)
+all_as_non_final <- all_as_non_hx %>%
+  theme_article()%>%
+  insert_row(c("Both sexes", "","","","","","","","","","",""),after = 1) %>%
+  insert_row(c("Male", "","","","","","","","","","",""),after = 9) %>%
+  insert_row(c("Female", "","","","","","","","","","",""),after = 17) %>%
+  set_bold(10,1)%>%
+  set_bold(18,1)%>%
+  set_top_border(row =10) 
+print(all_as_non_final)
+
+# print final table
+quick_xlsx(all_as_final,
+           file = "Table3-Age-Sex-Prevalence-nonBSW.xlsx")
+```
+
